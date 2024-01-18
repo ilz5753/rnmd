@@ -59,6 +59,28 @@ function Test() {
     },
     []
   );
+  let LeftBtn = React.useCallback(
+    ({ size, togglePreview, visible }: IMDEditorHeaderSearchBtn) => {
+      return (
+        <TouchableOpacity
+          {...{
+            // onPress: togglePreview,
+            activeOpacity: 0.72,
+            style: [styles.f1, styles.center],
+          }}
+        >
+          <Ionicons
+            {...{
+              name: `chevron-back`,
+              size: size * 0.6,
+              color: 'black',
+            }}
+          />
+        </TouchableOpacity>
+      );
+    },
+    []
+  );
   return (
     <MDEditor
       {...{
@@ -69,8 +91,11 @@ function Test() {
           shadowColor: 'rgba(0, 0, 0, 0.5)',
           SearchBtn,
           PreviewBtn,
+          LeftBtn,
         },
-        // isRTL: true,
+        isRTL: true,
+        preview: true,
+        horizontal: true,
       }}
     />
   );
