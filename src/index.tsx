@@ -1,3 +1,21 @@
-export function multiply(a: number, b: number): Promise<number> {
-  return Promise.resolve(a * b);
-}
+import { MDEditor } from './MDEditor';
+import type {
+  TMDEditorPadSize,
+  IPress,
+  IMDEditorHeaderBtn,
+  IMDEditorHeaderSearchBtn,
+  IMDEditorHeaderPreviewBtn,
+  TMDEditorBtn,
+  IMDEditorHeader,
+} from './MDEditor';
+import { MDRegexes } from './constants';
+export { MDEditor, MDRegexes };
+export type {
+  TMDEditorPadSize,
+  IPress,
+  IMDEditorHeaderBtn,
+  IMDEditorHeaderSearchBtn,
+  IMDEditorHeaderPreviewBtn,
+  TMDEditorBtn,
+  IMDEditorHeader,
+};
