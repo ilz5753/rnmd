@@ -4,7 +4,7 @@ RNMD is a React Native module that allows seamless integration of a Markdown edi
 
 > **Important: This module is currently in development and may not be feature-complete. Please use it with caution and expect updates and improvements in future releases.**
 
-## Installation
+<!-- ## Installation
 
 ```bash
 npm install rnmd
@@ -12,7 +12,13 @@ npm install rnmd
 yarn add rnmd
 # or bun
 bun add rnmd
-```
+``` -->
+
+## No Official Release on npm
+
+At the moment, there is no official release of RNMD on npm. This means that while you can install and experiment with the module using the instructions provided above, it is not yet considered stable for production use.
+
+If you are interested in staying updated on the progress of RNMD or contributing to its development, feel free to follow the project on [GitHub](https://github.com/ilz5753/rnmd).
 
 ## Usage
 
@@ -20,11 +26,10 @@ Import the `MDEditor` and register as new screen via react-navigation or your na
 
 ```tsx
 // showcase via expo
-import { Entypo, Ionicons } from '@expo/vector-icons';
 import * as React from 'react';
-import { StyleSheet, TouchableOpacity } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { IMDEditorHeaderSearchBtn, MDEditor } from 'rnmd';
+import { MDEditor } from 'rnmd';
 export default function App() {
   return (
     <GestureHandlerRootView
@@ -37,66 +42,26 @@ export default function App() {
   );
 }
 function Test() {
-  let SearchBtn = React.useCallback(
-    ({ size, toggleSearch }: IMDEditorHeaderSearchBtn) => {
-      return (
-        <TouchableOpacity
-          {...{
-            onPress: toggleSearch,
-            activeOpacity: 0.72,
-            style: [styles.f1, styles.center],
-          }}
-        >
-          <Ionicons
-            {...{
-              name: 'ios-search-outline',
-              size: size * 0.6,
-              color: 'black',
-            }}
-          />
-        </TouchableOpacity>
-      );
-    },
-    []
-  );
-  let PreviewBtn = React.useCallback(
-    ({ size, togglePreview, visible }: IMDEditorHeaderSearchBtn) => {
-      return (
-        <TouchableOpacity
-          {...{
-            onPress: togglePreview,
-            activeOpacity: 0.72,
-            style: [styles.f1, styles.center],
-          }}
-        >
-          <Entypo
-            {...{
-              name: `eye${visible ? '-with-line' : ''}`,
-              size: size * 0.6,
-              color: 'black',
-            }}
-          />
-        </TouchableOpacity>
-      );
-    },
-    []
-  );
   return (
     <MDEditor
       {...{
         header: {
           title: 'README',
           subtitle: 'examples/todo/readme.md',
-          bg: 'white',
-          shadowColor: 'rgba(0, 0, 0, 0.5)',
-          SearchBtn,
-          PreviewBtn,
+          hasLeftBtn: true,
+          // leftBtn: 'back-arrow',
+          // leftBtn: 'close',
         },
         // isRTL: true,
+        // horizontal: true,
+        colors: {
+          headerShadowColor: 'rgba(0, 0, 0, 0.5)',
+        },
       }}
     />
   );
 }
+
 const styles = StyleSheet.create({
   f1: {
     flex: 1,
@@ -134,6 +99,12 @@ const styles = StyleSheet.create({
 - **MD Text Input:** Write functions for Markdown text input, allowing users to compose content effortlessly.
 
 - **MD Preview Functions and Render View:** Develop functions for Markdown preview and render the view accordingly.
+
+## Todo
+
+- <input type="checkbox" disabled /> **Search Box:** Implement search functionality to navigate through Markdown content efficiently.
+- <input type="checkbox" disabled /> **TextInput Markdown Styles (Code Editor):** Apply styling to the TextInput for a better Markdown editing experience.
+- <input type="checkbox" disabled /> **Preview Render (+ Functions):** Develop functions for Markdown preview and render the view accordingly.
 
 ## Contributing
 
