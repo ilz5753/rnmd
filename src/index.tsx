@@ -1,21 +1,17 @@
-import { MDEditor } from './MDEditor';
+import type { IIcon } from './Icons';
+import { Icons } from './Icons';
 import type {
-  TMDEditorPadSize,
-  IPress,
-  IMDEditorHeaderBtn,
-  IMDEditorHeaderSearchBtn,
-  IMDEditorHeaderPreviewBtn,
-  TMDEditorBtn,
   IMDEditorHeader,
+  IPress,
+  TMDEditorPadSize,
 } from './MDEditor';
+import { MDEditor } from './MDEditor';
 import { MDRegexes } from './constants';
-export { MDEditor, MDRegexes };
+export { Icons, MDEditor, MDRegexes };
 export type {
-  TMDEditorPadSize,
-  IPress,
-  IMDEditorHeaderBtn,
-  IMDEditorHeaderSearchBtn,
-  IMDEditorHeaderPreviewBtn,
-  TMDEditorBtn,
+  IIcon,
   IMDEditorHeader,
+  IPress,
+  TMDEditorPadSize
 };
+

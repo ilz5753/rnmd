@@ -1,32 +1,34 @@
 import { isUndefined } from 'lodash';
 import React, {
-  createContext,
   useCallback,
-  useContext,
   useEffect,
   useMemo,
   useRef,
   useState,
-  type ComponentType,
   type Dispatch,
 } from 'react';
-import { StyleSheet, TextInput, useWindowDimensions } from 'react-native';
+import {
+  KeyboardAvoidingView,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  useWindowDimensions,
+} from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
-  FadeIn,
-  FadeInLeft,
-  FadeInRight,
   FadeInUp,
-  FadeOut,
-  FadeOutLeft,
-  FadeOutRight,
   FadeOutUp,
   Layout,
+  runOnJS,
+  useAnimatedReaction,
   useAnimatedStyle,
+  useDerivedValue,
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import { ReClamp } from './utils';
+import { Icons } from './Icons';
+import useKeyboard from './useKeyboard';
+import { ReClamp, isAndroid } from './utils';
 // import { MDRegexes } from './constants';
 // import { type IRegexes } from './utils';
 export type TMDEditorPadSize = 'x' | 'xx' | 'xxx';
@@ -35,37 +37,12 @@ export interface IPress {
   onLongPress?(): void;
   disabled?: boolean;
 }
-export interface IMDEditorHeaderBtn {
-  /**
-   * width and height of btn
-   */
-  size: number;
-}
-export interface IMDEditorHeaderSearchBtn extends IMDEditorHeaderBtn {
-  toggleSearch(): void;
-}
-export interface IMDEditorHeaderPreviewBtn extends IMDEditorHeaderBtn {
-  togglePreview(): void;
-  visible?: boolean;
-}
-export type TMDEditorBtn = ComponentType<IMDEditorHeaderBtn>;
 export interface IMDEditorHeader {
   /**
-   * a number between 48 to 72
+   * a number between `48 - 72`
+   * @default 60
    */
   height?: number;
-  /**
-   * header background color
-   *
-   * > must be set if use pass `shadowColor`
-   */
-  bg?: string;
-  /**
-   * in format of hex.
-   *
-   * e.g. `#123456`
-   */
-  shadowColor?: string;
   /**
    * screen title
    */
@@ -74,38 +51,46 @@ export interface IMDEditorHeader {
    * screen subtitle
    */
   subtitle?: string;
-  /**
-   * `close | back | clear | ...` buttons
-   */
-  LeftBtn?: TMDEditorBtn;
-  /**
-   * `check | done | save | ...` buttons
-   */
-  RightBtn?: TMDEditorBtn;
-  SearchBtn: ComponentType<IMDEditorHeaderSearchBtn>;
-  PreviewBtn?: ComponentType<IMDEditorHeaderPreviewBtn>;
+  hasLeftBtn?: boolean;
+  leftBtn?: 'close' | 'back-chevron' | 'back-arrow';
+  leftPress?: IPress;
 }
 export interface IMDEditorColors {
-  //
+  wrapperBg?: string;
+  headerBg?: string;
+  headerTitle?: string;
+  headerSubtitle?: string;
+  headerShadowColor?: string;
+  headerBackIcon?: string;
+  headerCloseIcon?: string;
+  headerSearchIcon?: string;
+  headerSaveIcon?: string;
+  headerPreviewEnabledIcon?: string;
+  headerPreviewDisabledIcon?: string;
+  panBg?: string;
+  panShadowColor?: string;
+  panDragView?: string;
+  activePanBg?: string;
+  activePanShadowColor?: string;
+  activePanDragBg?: string;
 }
 export interface IMDEditor {
-  colors: IMDEditorColors;
   /**
-   * background color
+   * colors object
    */
-  bg?: string;
+  colors: IMDEditorColors;
   /**
    * horizontal pan?
    */
   horizontal?: boolean;
   /**
-   * Safe Area View Height size
+   * Top Safe Area View Height size
    */
-  savHeight?: number;
+  topSavHeight?: number;
   /**
-   * Markdown Preview
+   * Bottom Safe Area View Height size
    */
-  preview?: boolean;
+  bottomSavHeight?: number;
   /**
    * md text
    */
@@ -113,76 +98,62 @@ export interface IMDEditor {
   /**
    * md text updater function
    */
-  setText?: Dispatch<string>;
+  onSubmitText?: Dispatch<string>;
   paddingSize?: TMDEditorPadSize;
-  header: IMDEditorHeader;
   /**
    * direction state
    */
   isRTL?: boolean;
+  header: IMDEditorHeader;
 }
 
-const MDEditorCtx = createContext<IMDEditor | null>(null);
-export const useMDEditor = () => {
-  let ctx = useContext(MDEditorCtx);
-  if (ctx === null)
-    throw new Error(
-      'You forgot to wrap Root component inside of "MDEditorProvider".'
-    );
-  return ctx;
-};
-export function MDEditorProvider() {
-  let [] = useState();
-  return <MDEditorCtx.Provider {...{ value: null }} />;
-}
 // let regexes: IRegexes[] = [
 //   {
 //     regex: MDRegexes.boldText,
 //     textStyle: [{ fontSize: 24, fontWeight: 'bold', lineHeight: 16 }],
 //   },
 // ];
-const IconWrapper = ({
-  size = 24,
-  children,
-  isRTL = false,
-  left = false,
-}: any) => {
-  return (
-    <Animated.View
-      {...{
-        style: [{ width: size, height: size }, styles.hidden],
-        children,
-        entering: left || isRTL ? FadeInLeft : FadeInRight,
-        exiting: left || isRTL ? FadeOutLeft : FadeOutRight,
-        layout: Layout,
-      }}
-    />
-  );
-};
 export function MDEditor({
-  bg,
+  colors,
   horizontal = false,
-  preview = false,
-  savHeight = 48,
+  topSavHeight = 48,
+  bottomSavHeight = 34,
   text = '',
-  setText,
+  onSubmitText,
   paddingSize = 'xxx',
   header,
   isRTL = false,
 }: IMDEditor) {
   let {
-    shadowColor,
-    bg: hbg,
-    LeftBtn,
+    wrapperBg = '#ffffff',
+    headerBg = '#ffffff',
+    headerBackIcon = '#000000',
+    headerCloseIcon = '#000000',
+    headerPreviewDisabledIcon = '#000000',
+    headerPreviewEnabledIcon = '#000000',
+    headerSearchIcon = '#000000',
+    headerSaveIcon = '#000000',
+    headerShadowColor,
+    panBg = '#ffffff',
+    panShadowColor = 'rgba(0, 0, 0, 0.5)',
+    panDragView = '#000000',
+    activePanBg = '#007aff',
+    activePanShadowColor = '#000000',
+    activePanDragBg = '#ffffff',
+    headerTitle = '#000000',
+    headerSubtitle = '#878787',
+  } = colors;
+  let {
+    hasLeftBtn = false,
+    leftBtn = 'back-chevron',
+    leftPress,
     title,
     subtitle,
     height: hHeight,
-    RightBtn,
-    PreviewBtn,
-    SearchBtn,
   } = header;
   let z = useMemo(() => (isRTL ? -1 : 1), [isRTL]);
   let { width: w, height: h } = useWindowDimensions();
+  let { keyboardHeight, keyboardIsActive } = useKeyboard();
   let pad = useMemo(() => {
     let size = 12;
     switch (paddingSize) {
@@ -205,53 +176,73 @@ export function MDEditor({
     else if (h > 72) h = 72;
     return h;
   }, [hHeight]);
-  let size = useMemo(() => headerHeight * 0.72, [headerHeight]);
   let HeaderHeight = useMemo(
-    () => savHeight + headerHeight,
-    [savHeight, headerHeight]
+    () => topSavHeight + headerHeight,
+    [topSavHeight, headerHeight]
   );
-  let RemainHeight = useMemo(() => h - HeaderHeight, [h, HeaderHeight]);
-  let wStyle = useMemo(() => ({ width: w }), [w]);
-  let hStyle = useMemo(() => ({ height: h }), [h]);
+  /**
+   * bottom safe area view height size
+   */
+  let bsh = useDerivedValue(
+    () => (keyboardIsActive.value ? 5 : bottomSavHeight),
+    [bottomSavHeight]
+  );
+  let bshStyle = useAnimatedStyle(() => ({
+    height: bsh.value,
+  }));
+  let spaces = useDerivedValue(() => HeaderHeight + bsh.value, [HeaderHeight]);
+  let _RemainHeight_ = useDerivedValue(
+    () => h - (spaces.value + keyboardHeight.value),
+    [h]
+  );
   /**
    * updates is from this instance (MDEditor or better TextInput) or not
    */
   let fromInside = useRef(false);
-  let [value, setValue] = useState('');
+  let [value, onChangeText] = useState('');
   let [search, setSearch] = useState('');
-  let [showPreview, setShowPreview] = useState(false);
+  let [showPreview, setShowPreview] = useState(true);
   let [showSearch, setShowSearch] = useState(false);
-  let active = useSharedValue(false);
+  let activeX = useSharedValue(false);
+  let activeY = useSharedValue(false);
   let wThrid = useMemo(() => w * 0.2, [w]);
-  let hThrid = useMemo(() => RemainHeight * 0.2, [RemainHeight]);
+  let _hThrid_ = useDerivedValue(() => _RemainHeight_.value * 0.2);
+  let _hThrid_sup = useDerivedValue(() => _RemainHeight_.value * 0.8);
+  let maxW = useMemo(() => w - wThrid - pad, [w, wThrid, pad]);
   let panWidth = useSharedValue(wThrid);
-  let panHeight = useSharedValue(hThrid);
+  let panHeight = useSharedValue(0);
   let panWidthHelp = useSharedValue(wThrid);
-  let panHeightHelp = useSharedValue(hThrid);
+  let panHeightHelp = useSharedValue(0);
   let gx = Gesture.Pan()
+    .onStart(() => {
+      activeX.value = true;
+    })
     .onUpdate(({ translationX }) => {
       let sum = translationX + panWidthHelp.value;
-      let a = w - wThrid - pad;
-      console.log({ sum, wThrid, a, pad });
-      if (isRTL) panWidth.value = ReClamp(sum, wThrid - w, -wThrid - pad);
-      else panWidth.value = ReClamp(sum, wThrid, w - wThrid - pad);
-      // if (isRTL) panWidth.value = ReClamp(sum, wThrid, w - wThrid - pad);
-      // else panWidth.value = ReClamp(sum, wThrid - w, -wThrid - pad);
+      if (isRTL) panWidth.value = ReClamp(sum, -maxW, -wThrid);
+      else panWidth.value = ReClamp(sum, wThrid, maxW);
     })
     .onEnd(() => {
       panWidthHelp.value = panWidth.value;
-    });
+      activeX.value = false;
+    })
+    .enabled(showPreview);
   let gy = Gesture.Pan()
+    .onStart(() => {
+      activeY.value = true;
+    })
     .onUpdate(({ translationY }) => {
       panHeight.value = ReClamp(
         translationY + panHeightHelp.value,
-        hThrid,
-        RemainHeight - hThrid - pad
+        _hThrid_.value,
+        _hThrid_sup.value - pad
       );
     })
     .onEnd(() => {
       panHeightHelp.value = panHeight.value;
-    });
+      activeY.value = false;
+    })
+    .enabled(showPreview);
   let onFocus = useCallback(() => {
     fromInside.current = true;
   }, []);
@@ -263,16 +254,15 @@ export function MDEditor({
   let onFinishEditing = useCallback(() => {
     fromInside.current = false;
   }, []);
-  let onChangeText = useCallback(
-    (txt: string) => {
-      setValue(txt);
-      if (setText) setText(txt);
-    },
-    [setText]
-  );
   useEffect(() => {
-    if (!fromInside.current) setValue(text);
+    if (!fromInside.current) onChangeText(text);
   }, [text]);
+  useEffect(() => {
+    if (!horizontal) {
+      panHeight.value = withTiming(_hThrid_.value);
+      panHeightHelp.value = _hThrid_.value;
+    }
+  }, [horizontal]);
   let fd: any = useMemo(
     () => ({ flexDirection: `row${isRTL ? '-reverse' : ''}` }),
     [isRTL]
@@ -282,308 +272,397 @@ export function MDEditor({
     [isRTL]
   );
   let togglePreview = useCallback(() => {
-    panWidth.value = withTiming(0);
-    panHeight.value = withTiming(0);
-    panWidthHelp.value = 0;
-    panHeightHelp.value = 0;
-    // if (showPreview) {
-    // } else {
-    // }
-    setShowPreview((p) => !p);
-  }, [showPreview]);
+    let sp = !showPreview;
+    if (horizontal) {
+      let wp = w - pad;
+      let z = isRTL ? -1 : 1;
+      let mw = z * wp;
+      if (sp) mw = z * wThrid;
+      panWidth.value = withTiming(mw, undefined, (f) => {
+        if (f) runOnJS(setShowPreview)(sp);
+      });
+      panWidthHelp.value = mw;
+    } else {
+      let mh = _RemainHeight_.value - pad;
+      if (sp)
+        mh = keyboardIsActive.value
+          ? h - (spaces.value + keyboardHeight.value + pad + _hThrid_.value)
+          : _hThrid_.value;
+      panHeight.value = withTiming(mh, undefined, (f) => {
+        if (f) runOnJS(setShowPreview)(sp);
+      });
+      panHeightHelp.value = mh;
+    }
+  }, [horizontal, showPreview, w, pad, wThrid, isRTL, h]);
   let toggleSearch = useCallback(() => {
     setShowSearch((s) => !s);
   }, []);
-  let BG = useMemo(() => ({ backgroundColor: bg }), [bg]);
+  let BG = useMemo(() => ({ backgroundColor: wrapperBg }), [wrapperBg]);
+  let _Pad = useMemo(() => ({ padding: hPad }), [hPad]);
+  let horHeight = useAnimatedStyle(() => ({
+    height: _RemainHeight_.value,
+  }));
   let horInput = useAnimatedStyle(() => ({
-    width: panWidth.value,
-    height: RemainHeight,
-    // height: RemainHeight,
+    width: Math.abs(panWidth.value),
   }));
   let horMd = useAnimatedStyle(() => ({
-    width: w - (pad + panWidth.value),
-    height: RemainHeight,
-    // height: RemainHeight,
+    width: w - (pad + Math.abs(panWidth.value)),
   }));
   let verInput = useAnimatedStyle(() => ({
-    width: w,
     height: panHeight.value,
-    // height: RemainHeight,
   }));
   let verMd = useAnimatedStyle(() => ({
-    width: w,
-    height: RemainHeight - (pad + panHeight.value),
-    // height: RemainHeight,
+    height: _RemainHeight_.value - (pad + panHeight.value),
   }));
+  /**
+   * header left color
+   */
+  let hlc = useMemo(
+    () => (leftBtn === 'close' ? headerCloseIcon : headerBackIcon),
+    [leftBtn, headerBackIcon, headerCloseIcon]
+  );
+  /**
+   * header left icon
+   */
+  let Hli = useMemo(() => {
+    let icon = isRTL ? Icons.ChevronRightIcon : Icons.ChevronLeftIcon;
+    switch (leftBtn) {
+      case 'back-arrow':
+        icon = isRTL ? Icons.ArrowRightIcon : Icons.ArrowLeftIcon;
+        break;
+      case 'close':
+        icon = Icons.CloseIcon;
+        break;
+      default:
+        break;
+    }
+    return icon;
+  }, [leftBtn, isRTL]);
+  /** */
+  let Preview = useMemo(
+    () => (showPreview ? Icons.EyeCloseIcon : Icons.EyeOpenIcon),
+    [showPreview]
+  );
+  let PanXBg = useAnimatedStyle(() => ({
+    backgroundColor: withTiming(activeX.value ? activePanBg : panBg),
+  }));
+  let PanYBg = useAnimatedStyle(() => ({
+    backgroundColor: withTiming(activeY.value ? activePanBg : panBg),
+  }));
+  let PanXShadow = useAnimatedStyle(() => ({
+    shadowColor: withTiming(
+      showPreview
+        ? activeX.value
+          ? activePanShadowColor
+          : panShadowColor
+        : 'transparent'
+    ),
+  }));
+  let PanYShadow = useAnimatedStyle(() => ({
+    shadowColor: withTiming(
+      showPreview
+        ? activeY.value
+          ? activePanShadowColor
+          : panShadowColor
+        : 'transparent'
+    ),
+  }));
+  let PanBgStyle = useMemo(
+    () => [styles.center, showPreview ? styles.shadowProps : { opacity: 0.5 }],
+    [panBg, panShadowColor, showPreview]
+  );
+  let DragXBg = useAnimatedStyle(() => ({
+    backgroundColor: withTiming(activeX.value ? activePanDragBg : panDragView),
+  }));
+  let DragYBg = useAnimatedStyle(() => ({
+    backgroundColor: withTiming(activeY.value ? activePanDragBg : panDragView),
+  }));
+  let ti = useMemo(
+    () => (
+      <TextInput
+        {...{
+          value,
+          onChangeText,
+          onFocus,
+          onBlur: onFinishEditing,
+          onSubmitEditing: onFinishEditing,
+          style: [styles.f1],
+          multiline: true,
+        }}
+      />
+    ),
+    [value]
+  );
+  let save = useCallback(() => {
+    if (onSubmitText) onSubmitText(value);
+  }, [onSubmitText, value]);
+  useAnimatedReaction(
+    () => keyboardHeight.value,
+    (kh) => {
+      if (!horizontal) {
+        if (showPreview) {
+          let s = spaces.value + kh + pad + _hThrid_.value;
+          let y = kh === 0 ? _hThrid_.value : h - s;
+          panHeight.value = withTiming(y);
+          panHeightHelp.value = y;
+        } else {
+          let s = spaces.value + kh + pad + (kh === 0 ? _hThrid_.value : 0);
+          let y = kh === 0 ? _RemainHeight_.value - pad : h - s;
+          panHeight.value = withTiming(y);
+          panHeightHelp.value = y;
+        }
+      }
+    },
+    [horizontal, h, pad, showPreview]
+  );
   return (
-    <Animated.View
-      {...{
-        style: [wStyle, hStyle, BG],
-      }}
+    <KeyboardAvoidingView
+      {...{ style: [styles.f1], behavior: isAndroid ? 'height' : 'padding' }}
     >
       <Animated.View
         {...{
-          style: [
-            wStyle,
-            {
-              paddingTop: savHeight,
-              height: HeaderHeight,
-            },
-            { backgroundColor: hbg },
-            !isUndefined(shadowColor) && [
-              {
-                shadowColor,
-              },
-              styles.shadowProps,
-            ],
-          ],
+          style: [styles.f1, BG],
         }}
       >
         <Animated.View
           {...{
             style: [
-              fd,
-              styles.aic,
-              styles.jcsb,
-              { paddingHorizontal: pad },
-              { height: headerHeight },
-              //   { borderWidth: 1 },
+              styles.fw,
+              {
+                paddingTop: topSavHeight,
+                height: HeaderHeight,
+              },
+              { backgroundColor: headerBg },
+              !isUndefined(headerShadowColor) && [
+                {
+                  shadowColor: headerShadowColor,
+                },
+                styles.shadowProps,
+              ],
             ],
           }}
         >
           <Animated.View
             {...{
-              style: [fd, styles.aic, LeftBtn && gap],
+              style: [
+                fd,
+                styles.aic,
+                styles.jcsb,
+                { paddingHorizontal: pad },
+                { height: headerHeight },
+                //   { borderWidth: 1 },
+              ],
             }}
           >
-            {LeftBtn && (
-              <IconWrapper {...{ size, left: true, isRTL }}>
-                <LeftBtn {...{ size }} />
-              </IconWrapper>
-            )}
             <Animated.View
               {...{
-                style: [!isUndefined(subtitle) && gap],
+                style: [fd, styles.aic, hasLeftBtn && gap],
               }}
             >
-              <Animated.Text
+              {hasLeftBtn && (
+                <TouchableOpacity {...{ activeOpacity: 0.72, ...leftPress }}>
+                  <Hli {...{ color: hlc }} />
+                </TouchableOpacity>
+              )}
+              <Animated.View
                 {...{
-                  style: [
-                    ta,
-                    { fontSize: 18, fontWeight: '600', color: 'black' },
-                  ],
+                  style: [!isUndefined(subtitle) && gap],
                 }}
               >
-                {title}
-              </Animated.Text>
-              {subtitle && (
                 <Animated.Text
-                  {...{ style: [ta, { fontSize: 13.5, color: 'gray' }] }}
+                  {...{
+                    style: [
+                      ta,
+                      styles.f1,
+                      { fontSize: 18, fontWeight: '600', color: headerTitle },
+                    ],
+                  }}
                 >
-                  {subtitle}
+                  {title}
                 </Animated.Text>
-              )}
+                {subtitle && (
+                  <Animated.Text
+                    {...{
+                      style: [
+                        ta,
+                        styles.f1,
+                        { fontSize: 13.5, color: headerSubtitle },
+                      ],
+                    }}
+                  >
+                    {subtitle}
+                  </Animated.Text>
+                )}
+              </Animated.View>
             </Animated.View>
-          </Animated.View>
-          <Animated.View
-            {...{
-              style: [fd, styles.aic, (PreviewBtn || RightBtn) && gap],
-            }}
-          >
-            <IconWrapper {...{ size, isRTL }}>
-              <SearchBtn {...{ size, toggleSearch }} />
-            </IconWrapper>
-            {preview && PreviewBtn && (
-              <IconWrapper {...{ size, isRTL }}>
-                <PreviewBtn
-                  {...{ size, togglePreview, visible: showPreview }}
+            <Animated.View
+              {...{
+                style: [fd, styles.aic, gap],
+              }}
+            >
+              <TouchableOpacity
+                {...{
+                  activeOpacity: 0.72,
+                  onPress: toggleSearch,
+                }}
+              >
+                <Icons.SearchIcon {...{ color: headerSearchIcon }} />
+              </TouchableOpacity>
+              <TouchableOpacity
+                {...{
+                  activeOpacity: 0.72,
+                  onPress: togglePreview,
+                }}
+              >
+                <Preview
+                  {...{
+                    color: showPreview
+                      ? headerPreviewDisabledIcon
+                      : headerPreviewEnabledIcon,
+                  }}
                 />
-              </IconWrapper>
-            )}
-            {RightBtn && (
-              <IconWrapper {...{ size, isRTL }}>
-                <RightBtn {...{ size }} />
-              </IconWrapper>
-            )}
+              </TouchableOpacity>
+              <TouchableOpacity
+                {...{
+                  activeOpacity: 0.72,
+                  onPress: save,
+                }}
+              >
+                <Icons.SaveIcon
+                  {...{
+                    color: headerSaveIcon,
+                  }}
+                />
+              </TouchableOpacity>
+            </Animated.View>
           </Animated.View>
         </Animated.View>
-      </Animated.View>
-      <Animated.View {...{ style: [styles.f1, horizontal && fd] }}>
-        {horizontal ? (
-          <>
-            <Animated.View {...{ style: [horInput] }}>
-              <TextInput
-                {...{
-                  value,
-                  onChangeText,
-                  onFocus,
-                  onBlur: onFinishEditing,
-                  onSubmitEditing: onFinishEditing,
-                  style: [styles.f1, { padding: hPad }],
-                  multiline: true,
-                }}
-              />
-            </Animated.View>
-            <GestureDetector {...{ gesture: gx }}>
-              <Animated.View
-                {...{
-                  style: [
-                    { width: pad },
-                    { height: RemainHeight },
-                    styles.center,
-                    { borderWidth: 1 },
-                  ],
-                }}
-              >
+        <Animated.View {...{ style: [styles.f1] }}>
+          {horizontal ? (
+            <Animated.View {...{ style: [styles.f1, fd, horHeight] }}>
+              <Animated.View {...{ style: [horInput, _Pad] }}>
+                {ti}
+              </Animated.View>
+              <GestureDetector {...{ gesture: gx }}>
                 <Animated.View
                   {...{
                     style: [
-                      {
-                        width: pad / 3,
-                        height: 2 * pad,
-                        backgroundColor: 'black',
-                      },
-                      styles.searchBr,
+                      { width: pad },
+                      // { height: RemainHeight },
+
+                      PanBgStyle,
+                      PanXBg,
+                      PanXShadow,
                     ],
                   }}
-                />
-              </Animated.View>
-            </GestureDetector>
-            <Animated.View
-              {...{
-                style: [horMd],
-              }}
-            ></Animated.View>
-          </>
-        ) : (
-          <>
-            <Animated.View {...{ style: [verInput] }}>
-              <TextInput
-                {...{
-                  value,
-                  onChangeText,
-                  onFocus,
-                  onBlur: onFinishEditing,
-                  onSubmitEditing: onFinishEditing,
-                  style: [styles.f1, { padding: hPad }],
-                  multiline: true,
-                }}
-              />
-            </Animated.View>
-            <GestureDetector {...{ gesture: gy }}>
+                >
+                  <Animated.View
+                    {...{
+                      style: [
+                        {
+                          width: pad / 3,
+                          height: 2 * pad,
+                        },
+                        styles.searchBr,
+                        DragXBg,
+                      ],
+                    }}
+                  />
+                </Animated.View>
+              </GestureDetector>
               <Animated.View
                 {...{
-                  style: [
-                    wStyle,
-                    { height: pad },
-                    { borderWidth: 1 },
-                    styles.center,
-                  ],
+                  style: [horMd, _Pad],
                 }}
-              >
+              ></Animated.View>
+            </Animated.View>
+          ) : (
+            <Animated.View {...{ style: [styles.f1] }}>
+              <Animated.View {...{ style: [styles.fw, verInput, _Pad] }}>
+                {ti}
+              </Animated.View>
+              <GestureDetector {...{ gesture: gy }}>
                 <Animated.View
                   {...{
                     style: [
-                      {
-                        width: 2 * pad,
-                        height: pad / 3,
-                        backgroundColor: 'black',
-                      },
-                      styles.searchBr,
+                      styles.fw,
+                      { height: pad },
+                      PanBgStyle,
+                      PanYBg,
+                      // { borderWidth: 1 },
+                      PanYShadow,
                     ],
                   }}
-                />
-              </Animated.View>
-            </GestureDetector>
-            <Animated.View
-              {...{
-                style: [verMd],
-              }}
-            ></Animated.View>
-          </>
-        )}
-        {/* <Animated.View {...{ style: [mdInput, { borderWidth: 1 }] }}>
-          <TextInput
+                >
+                  <Animated.View
+                    {...{
+                      style: [
+                        {
+                          width: 2 * pad,
+                          height: pad / 3,
+                        },
+                        styles.searchBr,
+                        DragYBg,
+                      ],
+                    }}
+                  />
+                </Animated.View>
+              </GestureDetector>
+              <Animated.View
+                {...{
+                  style: [styles.fw, verMd, _Pad],
+                }}
+              ></Animated.View>
+            </Animated.View>
+          )}
+          <Animated.View
             {...{
-              value,
-              onChangeText,
-              onFocus,
-              onBlur: onFinishEditing,
-              onSubmitEditing: onFinishEditing,
+              style: [bshStyle, { borderWidth: 1 }],
             }}
           />
-        </Animated.View>
-        {horizontal ? (
-          <GestureDetector {...{ gesture: gx }}>
-            <Animated.View
-              {...{ style: [{ width: pad }, { height: RemainHeight }] }}
-            ></Animated.View>
-          </GestureDetector>
-        ) : (
-          <GestureDetector {...{ gesture: gy }}>
-            <Animated.View
-              {...{ style: [{ height: pad }, wStyle] }}
-            ></Animated.View>
-          </GestureDetector>
-        )}
-        <Animated.View></Animated.View> */}
-
-        {/*  */}
-        {/* <GestureDetector {...{ gesture }}>
-          <Animated.View {...{}}>
-            <TextInput
-              {...{
-                value,
-                onChangeText,
-                onFocus,
-                onBlur: onFinishEditing,
-                onSubmitEditing: onFinishEditing,
-              }}
-            />
-          </Animated.View>
-        </GestureDetector> */}
-        {/* SearchBar */}
-        {showSearch && (
-          <Animated.View
-            {...{
-              style: [
-                wStyle,
-                styles.overlay,
-                { paddingHorizontal: pad },
-                { top: pad },
-              ],
-              entering: FadeInUp,
-              exiting: FadeOutUp,
-              layout: Layout,
-            }}
-          >
+          {/* SearchBar */}
+          {showSearch && (
             <Animated.View
               {...{
                 style: [
-                  // { padding: hPad },
-                  styles.searchBr,
-                  BG,
-                  // styles.shadowProps,
-                  { borderWidth: 1 },
-                  fd,
-                  styles.aic,
+                  styles.fw,
+                  styles.overlay,
+                  { paddingHorizontal: pad },
+                  { top: pad },
                 ],
               }}
             >
-              {/*  */}
-              {/* <Animated.View></Animated.View> */}
-              <TextInput
+              <Animated.View
                 {...{
-                  style: [styles.f1, styles.searchBr, { padding: hPad }],
-                  onChangeText: setSearch,
-                  value: search,
+                  style: [
+                    // { padding: hPad },
+                    styles.searchBr,
+                    BG,
+                    // styles.shadowProps,
+                    { borderWidth: 1 },
+                    fd,
+                    styles.aic,
+                  ],
+                  entering: FadeInUp,
+                  exiting: FadeOutUp,
+                  layout: Layout,
                 }}
-              />
+              >
+                {/*  */}
+                {/* <Animated.View></Animated.View> */}
+                <TextInput
+                  {...{
+                    style: [styles.f1, styles.searchBr, { padding: hPad }],
+                    onChangeText: setSearch,
+                    value: search,
+                  }}
+                />
+              </Animated.View>
             </Animated.View>
-          </Animated.View>
-        )}
+          )}
+        </Animated.View>
       </Animated.View>
-    </Animated.View>
+    </KeyboardAvoidingView>
   );
 }
 const styles = StyleSheet.create({
@@ -592,6 +671,9 @@ const styles = StyleSheet.create({
   },
   jcsb: {
     justifyContent: 'space-between',
+  },
+  fw: {
+    width: '100%',
   },
   f1: {
     flex: 1,

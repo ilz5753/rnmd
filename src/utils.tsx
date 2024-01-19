@@ -3,6 +3,7 @@ import type { TextStyle } from 'react-native';
 import type { StyleProp } from 'react-native';
 import React from 'react';
 import { Text } from 'react-native';
+import { Platform } from 'react-native';
 // import { cloneDeep } from 'lodash';
 
 export interface IRegexes {
@@ -36,3 +37,4 @@ export const ReClamp = (value: number, min: number, max: number) => {
   'worklet';
   return Math.min(max, Math.max(min, value));
 };
+export const isAndroid = Platform.OS === 'android';
