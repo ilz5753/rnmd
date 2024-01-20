@@ -4,6 +4,12 @@ RNMD is a React Native module that allows seamless integration of a Markdown edi
 
 > **Important: This module is currently in development and may not be feature-complete. Please use it with caution and expect updates and improvements in future releases.**
 
+## Example Videos
+
+vertical | horizontal - ltr | horizontal - rtl
+:---: | :---: | :---:
+ [Vertical Preview](https://www.dropbox.com/scl/fi/x1r2rapyhbijafk7krliq/Simulator-Screen-Recording-iPhone-14-Pro-Max-2024-01-20-at-03.39.42.mp4?rlkey=nhrnoafw28ca9bqkjfevkugin&dl=0) | [Horizontal Preview - left to right direction](https://www.dropbox.com/scl/fi/yokpu0qujubtdwiso1sjb/Simulator-Screen-Recording-iPhone-14-Pro-Max-2024-01-20-at-03.36.54.mp4?rlkey=89f0czq4xdxnudydlv03lw0p5&dl=0) | [Horizontal Preview - right to left direction](https://www.dropbox.com/scl/fi/bnrnbj4pb6dzjaxuig8ml/Simulator-Screen-Recording-iPhone-14-Pro-Max-2024-01-20-at-03.38.25.mp4?rlkey=51i90gfwxal4nr4lnay9siaxw&dl=0)
+
 <!-- ## Installation
 
 ```bash
@@ -102,9 +108,9 @@ const styles = StyleSheet.create({
 
 ## Todo
 
-- <input type="checkbox" disabled /> **Search Box:** Implement search functionality to navigate through Markdown content efficiently.
-- <input type="checkbox" disabled /> **TextInput Markdown Styles (Code Editor):** Apply styling to the TextInput for a better Markdown editing experience.
-- <input type="checkbox" disabled /> **Preview Render (+ Functions):** Develop functions for Markdown preview and render the view accordingly.
+- **Search Box:** Implement search functionality to navigate through Markdown content efficiently.
+- **TextInput Markdown Styles (Code Editor):** Apply styling to the TextInput for a better Markdown editing experience.
+- **Preview Render (+ Functions):** Develop functions for Markdown preview and render the view accordingly.
 
 ## Contributing
 
