@@ -257,12 +257,12 @@ export function MDEditor({
   useEffect(() => {
     if (!fromInside.current) onChangeText(text);
   }, [text]);
-  useEffect(() => {
-    if (!horizontal) {
-      panHeight.value = withTiming(_hThrid_.value);
-      panHeightHelp.value = _hThrid_.value;
-    }
-  }, [horizontal]);
+  // useEffect(() => {
+  //   if (!horizontal) {
+  //     panHeight.value = withTiming(_hThrid_.value);
+  //     panHeightHelp.value = _hThrid_.value;
+  //   }
+  // }, [horizontal]);
   let fd: any = useMemo(
     () => ({ flexDirection: `row${isRTL ? '-reverse' : ''}` }),
     [isRTL]
@@ -579,7 +579,9 @@ export function MDEditor({
                 {...{
                   style: [horMd, _Pad],
                 }}
-              ></Animated.View>
+              >
+                {P}
+              </Animated.View>
             </Animated.View>
           ) : (
             <Animated.View {...{ style: [styles.f1] }}>
