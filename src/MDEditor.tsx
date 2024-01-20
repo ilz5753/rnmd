@@ -386,7 +386,7 @@ export function MDEditor({
           onFocus,
           onBlur: onFinishEditing,
           onSubmitEditing: onFinishEditing,
-          style: [styles.f1],
+          style: [styles.f1, { fontSize: 24, color: 'black' }],
           multiline: true,
         }}
       />
@@ -414,6 +414,11 @@ export function MDEditor({
       }
     },
     [horizontal, h, pad, showPreview]
+  );
+  let P = (
+    <Animated.Text {...{ style: [{ fontSize: 24, color: 'black' }] }}>
+      Preview
+    </Animated.Text>
   );
   return (
     <KeyboardAvoidingView
@@ -612,7 +617,9 @@ export function MDEditor({
                 {...{
                   style: [styles.fw, verMd, _Pad],
                 }}
-              ></Animated.View>
+              >
+                {P}
+              </Animated.View>
             </Animated.View>
           )}
           <Animated.View

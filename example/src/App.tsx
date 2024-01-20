@@ -29,6 +29,9 @@ function Test() {
         colors: {
           headerShadowColor: 'rgba(0, 0, 0, 0.5)',
         },
+        text: ['This is Editor', Array(10000).fill('').join('a')].join(
+          '\n\n\n'
+        ),
       }}
     />
   );
