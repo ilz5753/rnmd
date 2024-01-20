@@ -102,9 +102,9 @@ const styles = StyleSheet.create({
 
 ## Todo
 
-- <input type="checkbox" disabled /> **Search Box:** Implement search functionality to navigate through Markdown content efficiently.
-- <input type="checkbox" disabled /> **TextInput Markdown Styles (Code Editor):** Apply styling to the TextInput for a better Markdown editing experience.
-- <input type="checkbox" disabled /> **Preview Render (+ Functions):** Develop functions for Markdown preview and render the view accordingly.
+- **Search Box:** Implement search functionality to navigate through Markdown content efficiently.
+- **TextInput Markdown Styles (Code Editor):** Apply styling to the TextInput for a better Markdown editing experience.
+- **Preview Render (+ Functions):** Develop functions for Markdown preview and render the view accordingly.
 
 ## Contributing
 
