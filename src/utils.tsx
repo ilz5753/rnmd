@@ -102,6 +102,7 @@ export const DefaultMDPreviewStyles = StyleSheet.create({
   list: {},
   listItem: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 1,
     width: '100%',
   },
