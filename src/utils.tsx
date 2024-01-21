@@ -103,6 +103,7 @@ export const DefaultMDPreviewStyles = StyleSheet.create({
   listItem: {
     flexDirection: 'row',
     gap: 1,
+    width: '100%',
   },
   listItemBullet: {
     fontSize: 20,
