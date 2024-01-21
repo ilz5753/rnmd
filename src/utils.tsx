@@ -84,6 +84,8 @@ export const DefaultMDPreviewStyles = StyleSheet.create({
   hr: {
     backgroundColor: '#cccccc',
     height: 1,
+    marginTop: 4,
+    marginBottom: 8,
   },
   image: {
     height: 50, // TODO: React Native needs to support auto image size
@@ -99,12 +101,15 @@ export const DefaultMDPreviewStyles = StyleSheet.create({
     color: 'white',
     paddingHorizontal: 2,
   },
-  list: {},
+  list: {
+    paddingLeft: 16,
+  },
   listItem: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 1,
     width: '100%',
+    marginBottom: 4,
   },
   listItemBullet: {
     fontSize: 20,
@@ -132,6 +137,7 @@ export const DefaultMDPreviewStyles = StyleSheet.create({
   },
   tableHeader: {
     // backgroundColor: '#222222',
+    width: '100%',
     flexDirection: 'row',
     justifyContent: 'space-around',
   },
@@ -141,6 +147,7 @@ export const DefaultMDPreviewStyles = StyleSheet.create({
     padding: 5,
   },
   tableRow: {
+    width: '100%',
     borderBottomWidth: 1,
     borderColor: '#222222',
     flexDirection: 'row',
