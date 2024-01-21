@@ -19,19 +19,46 @@ function Test() {
       {...{
         header: {
           title: 'README',
-          subtitle: 'examples/todo/readme.md',
-          hasLeftBtn: true,
+          subtitle: 'examples/files/abcddddddd/todo/readme.md',
+          // hasLeftBtn: true,
           // leftBtn: 'back-arrow',
           // leftBtn: 'close',
+          height: 48,
         },
-        // isRTL: true,
-        // horizontal: true,
+        isRTL: true,
+        horizontal: true,
         colors: {
           headerShadowColor: 'rgba(0, 0, 0, 0.5)',
         },
-        text: ['This is Editor', Array(10000).fill('').join('a')].join(
-          '\n\n\n'
-        ),
+        // text: ['```sh', 'yarn example web', '```', '\n\n'].join('\n'),
+        text: [
+          `**Bold Text**
+
+*Italic Text*
+
+~~Strikethrough Text~~
+
+[Link Text](https://example.com)`,
+          `# Heading 1
+
+## Heading 2
+
+### Heading 3`,
+          `
+- Item 1
+- Item 2
+- Item 3
+
+
+1. Ordered Item 1
+2. Ordered Item 2
+3. Ordered Item 3`,
+          '```tsx',
+          'console.log("Hello User!");',
+          '```',
+          '\nJust follow `App.js` for more **`informations`**',
+          '\n\n',
+        ].join('\n\n'),
       }}
     />
   );
@@ -40,20 +67,5 @@ function Test() {
 const styles = StyleSheet.create({
   f1: {
     flex: 1,
-  },
-  center: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  box: {
-    width: 200,
-    height: 60,
-    marginVertical: 20,
-    borderWidth: 1,
   },
 });

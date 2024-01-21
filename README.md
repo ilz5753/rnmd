@@ -1,8 +1,12 @@
-# RNMD (React Native Markdown Editor and View)
+# React Native Markdown Editor and View (RNMD)
 
 RNMD is a React Native module that allows seamless integration of a Markdown editor and live preview functionality into your React Native projects.
 
-> **Important: This module is currently in development and may not be feature-complete. Please use it with caution and expect updates and improvements in future releases.**
+**Important: This is the first version (v1.0.0) of RNMD. While it is feature-complete for basic usage, we are actively working on updates to improve performance and enhance the user interface. Expect regular updates and improvements in future releases.**
+
+## Thanks
+
+Special thanks to the creators of [react-native-markdown](https://github.com/lwansbrough/react-native-markdown) for their excellent work. RNMD leverages the foundation laid by react-native-markdown to provide a rich Markdown editing and preview experience in React Native.
 
 ## Example Videos
 
@@ -10,44 +14,32 @@ vertical | horizontal - ltr | horizontal - rtl
 :---: | :---: | :---:
  [Vertical Preview](https://www.dropbox.com/scl/fi/x1r2rapyhbijafk7krliq/Simulator-Screen-Recording-iPhone-14-Pro-Max-2024-01-20-at-03.39.42.mp4?rlkey=nhrnoafw28ca9bqkjfevkugin&dl=0) | [Horizontal Preview - left to right direction](https://www.dropbox.com/scl/fi/yokpu0qujubtdwiso1sjb/Simulator-Screen-Recording-iPhone-14-Pro-Max-2024-01-20-at-03.36.54.mp4?rlkey=89f0czq4xdxnudydlv03lw0p5&dl=0) | [Horizontal Preview - right to left direction](https://www.dropbox.com/scl/fi/bnrnbj4pb6dzjaxuig8ml/Simulator-Screen-Recording-iPhone-14-Pro-Max-2024-01-20-at-03.38.25.mp4?rlkey=51i90gfwxal4nr4lnay9siaxw&dl=0)
 
-<!-- ## Installation
+## Installation
 
 ```bash
-npm install rnmd
+npm install @ilz5753/rnmd
 # or yarn
-yarn add rnmd
+yarn add @ilz5753/rnmd
 # or bun
-bun add rnmd
-``` -->
+bun add @ilz5753/rnmd
+```
 
-## No Official Release on npm
+<!-- ## No Official Release on npm
 
 At the moment, there is no official release of RNMD on npm. This means that while you can install and experiment with the module using the instructions provided above, it is not yet considered stable for production use.
 
-If you are interested in staying updated on the progress of RNMD or contributing to its development, feel free to follow the project on [GitHub](https://github.com/ilz5753/rnmd).
+If you are interested in staying updated on the progress of RNMD or contributing to its development, feel free to follow the project on [GitHub](https://github.com/ilz5753/rnmd). -->
 
 ## Usage
 
+### MDEditor
 Import the `MDEditor` and register as new screen via react-navigation or your navigation strategy and navigate to it through `navigate` function
 
 ```tsx
-// showcase via expo
 import * as React from 'react';
-import { StyleSheet } from 'react-native';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { MDEditor } from 'rnmd';
-export default function App() {
-  return (
-    <GestureHandlerRootView
-      {...{
-        style: [styles.f1],
-      }}
-    >
-      <Test />
-    </GestureHandlerRootView>
-  );
-}
-function Test() {
+import { MDEditor } from '@ilz5753/rnmd';
+
+function UserReadMe() {
   return (
     <MDEditor
       {...{
@@ -67,27 +59,30 @@ function Test() {
     />
   );
 }
+```
 
-const styles = StyleSheet.create({
-  f1: {
-    flex: 1,
-  },
-  center: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  box: {
-    width: 200,
-    height: 60,
-    marginVertical: 20,
-    borderWidth: 1,
-  },
-});
+### MDPreview
+
+Import `MDPreview` and pass your markdown content to it!
+
+```tsx
+import * as React from 'react';
+import { MDPreview } from '@ilz5753/rnmd';
+
+function UserReadMe() {
+  return (
+    <MDPreview
+      {...{
+        md: `# Project
+        hey, this is my first repo readme!
+        [test link](https://example.com)
+        **Bold**
+        *italic text*
+        `
+      }}
+    />
+  );
+}
 ```
 
 ## Features (In Development)
@@ -109,8 +104,6 @@ const styles = StyleSheet.create({
 ## Todo
 
 - **Search Box:** Implement search functionality to navigate through Markdown content efficiently.
-- **TextInput Markdown Styles (Code Editor):** Apply styling to the TextInput for a better Markdown editing experience.
-- **Preview Render (+ Functions):** Develop functions for Markdown preview and render the view accordingly.
 
 ## Contributing
 

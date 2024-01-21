@@ -115,6 +115,18 @@ function SaveIcon({ color }: IIcon) {
     </Svg>
   );
 }
+function CopyIcon({ color }: IIcon) {
+  return (
+    <Svg width={32} height={32} viewBox="0 0 32 32" fill="none">
+      <Path
+        d="M11.399 11.399V9.266A4.266 4.266 0 0115.665 5h6.399a4.266 4.266 0 014.266 4.266v6.399a4.266 4.266 0 01-4.266 4.266h-2.133m-8.532-8.532H9.266A4.266 4.266 0 005 15.665v6.399a4.266 4.266 0 004.266 4.266h6.399a4.266 4.266 0 004.266-4.266v-2.133m-8.532-8.532h4.266a4.266 4.266 0 014.266 4.266v4.266"
+        stroke={color}
+        strokeWidth={1.5}
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
 /**
  * `32 * 32` icons
  */
@@ -128,4 +140,5 @@ export const Icons = {
   ArrowRightIcon,
   CloseIcon,
   SaveIcon,
+  CopyIcon,
 };

@@ -1,5 +1,5 @@
 {
-  "name": "rnmd",
+  "name": "@ilz5753/rnmd",
   "version": "0.1.0",
   "description": "React Native Markdown Editor and View",
   "main": "lib/commonjs/index",
@@ -61,6 +61,7 @@
     "@types/lodash": "^4.14.202",
     "@types/react": "~17.0.21",
     "@types/react-native": "0.70.0",
+    "@types/react-syntax-highlighter": "^15.5.11",
     "commitlint": "^17.0.2",
     "del-cli": "^5.0.0",
     "eslint": "^8.4.1",
@@ -72,6 +73,7 @@
     "react-native": "0.72.6",
     "react-native-builder-bob": "^0.20.0",
     "release-it": "^15.0.0",
+    "remark-mdc": "^3.0.1",
     "typescript": "^5.0.2"
   },
   "resolutions": {
@@ -162,8 +164,14 @@
     ]
   },
   "dependencies": {
+    "@react-native-clipboard/clipboard": "^1.13.2",
+    "@react-native/babel-preset": "^0.73.19",
+    "react-native-code-highlighter": "^1.2.2",
+    "react-native-error-boundary": "^1.2.4",
     "react-native-gesture-handler": "^2.14.1",
     "react-native-reanimated": "~3.3.0",
-    "react-native-svg": "^14.1.0"
+    "react-native-svg": "^14.1.0",
+    "react-syntax-highlighter": "^15.5.0",
+    "simple-markdown": "^0.7.3"
   }
 }

@@ -29,6 +29,7 @@ import Animated, {
 import { Icons } from './Icons';
 import useKeyboard from './useKeyboard';
 import { ReClamp, isAndroid } from './utils';
+import { MDPreview } from './MDPreview';
 // import { MDRegexes } from './constants';
 // import { type IRegexes } from './utils';
 export type TMDEditorPadSize = 'x' | 'xx' | 'xxx';
@@ -73,6 +74,11 @@ export interface IMDEditorColors {
   activePanBg?: string;
   activePanShadowColor?: string;
   activePanDragBg?: string;
+  editorBg?: string;
+  editorTextColor?: string;
+}
+export interface IMDEditorInput {
+  fontSize?: number;
 }
 export interface IMDEditor {
   /**
@@ -105,6 +111,7 @@ export interface IMDEditor {
    */
   isRTL?: boolean;
   header: IMDEditorHeader;
+  editorConfig?: IMDEditorInput;
 }
 
 // let regexes: IRegexes[] = [
@@ -120,9 +127,10 @@ export function MDEditor({
   bottomSavHeight = 34,
   text = '',
   onSubmitText,
-  paddingSize = 'xxx',
+  paddingSize = 'xx',
   header,
   isRTL = false,
+  editorConfig = {},
 }: IMDEditor) {
   let {
     wrapperBg = '#ffffff',
@@ -142,6 +150,8 @@ export function MDEditor({
     activePanDragBg = '#ffffff',
     headerTitle = '#000000',
     headerSubtitle = '#878787',
+    editorBg = '#ffffff',
+    editorTextColor = '#000000',
   } = colors;
   let {
     hasLeftBtn = false,
@@ -151,7 +161,8 @@ export function MDEditor({
     subtitle,
     height: hHeight,
   } = header;
-  let z = useMemo(() => (isRTL ? -1 : 1), [isRTL]);
+  let { fontSize: editorFontSize = 16 } = editorConfig;
+  // let z = useMemo(() => (isRTL ? -1 : 1), [isRTL]);
   let { width: w, height: h } = useWindowDimensions();
   let { keyboardHeight, keyboardIsActive } = useKeyboard();
   let pad = useMemo(() => {
@@ -345,9 +356,11 @@ export function MDEditor({
   );
   let PanXBg = useAnimatedStyle(() => ({
     backgroundColor: withTiming(activeX.value ? activePanBg : panBg),
+    opacity: withTiming(showPreview ? 1 : 0.5),
   }));
   let PanYBg = useAnimatedStyle(() => ({
     backgroundColor: withTiming(activeY.value ? activePanBg : panBg),
+    opacity: withTiming(showPreview ? 1 : 0.5),
   }));
   let PanXShadow = useAnimatedStyle(() => ({
     shadowColor: withTiming(
@@ -368,7 +381,7 @@ export function MDEditor({
     ),
   }));
   let PanBgStyle = useMemo(
-    () => [styles.center, showPreview ? styles.shadowProps : { opacity: 0.5 }],
+    () => [styles.center, showPreview && styles.shadowProps],
     [panBg, panShadowColor, showPreview]
   );
   let DragXBg = useAnimatedStyle(() => ({
@@ -386,12 +399,19 @@ export function MDEditor({
           onFocus,
           onBlur: onFinishEditing,
           onSubmitEditing: onFinishEditing,
-          style: [styles.f1, { fontSize: 24, color: 'black' }],
+          style: [
+            styles.f1,
+            {
+              fontSize: editorFontSize,
+              color: editorTextColor,
+              backgroundColor: editorBg,
+            },
+          ],
           multiline: true,
         }}
       />
     ),
-    [value]
+    [value, editorFontSize, editorBg, editorTextColor]
   );
   let save = useCallback(() => {
     if (onSubmitText) onSubmitText(value);
@@ -415,10 +435,9 @@ export function MDEditor({
     },
     [horizontal, h, pad, showPreview]
   );
-  let P = (
-    <Animated.Text {...{ style: [{ fontSize: 24, color: 'black' }] }}>
-      Preview
-    </Animated.Text>
+  let P = useMemo(
+    () => <MDPreview {...{ md: value, colors: { bg: 'orange' } }} />,
+    [value]
   );
   return (
     <KeyboardAvoidingView
@@ -461,7 +480,7 @@ export function MDEditor({
           >
             <Animated.View
               {...{
-                style: [fd, styles.aic, hasLeftBtn && gap],
+                style: [styles.f1, fd, styles.aic, hasLeftBtn && gap],
               }}
             >
               {hasLeftBtn && (
@@ -471,7 +490,7 @@ export function MDEditor({
               )}
               <Animated.View
                 {...{
-                  style: [!isUndefined(subtitle) && gap],
+                  style: [!isUndefined(subtitle) && gap, styles.f1],
                 }}
               >
                 <Animated.Text
@@ -481,6 +500,8 @@ export function MDEditor({
                       styles.f1,
                       { fontSize: 18, fontWeight: '600', color: headerTitle },
                     ],
+                    numberOfLines: 1,
+                    ellipsizeMode: 'middle',
                   }}
                 >
                   {title}
@@ -493,6 +514,8 @@ export function MDEditor({
                         styles.f1,
                         { fontSize: 13.5, color: headerSubtitle },
                       ],
+                      numberOfLines: 1,
+                      ellipsizeMode: 'middle',
                     }}
                   >
                     {subtitle}
