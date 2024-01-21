@@ -1,6 +1,6 @@
 {
   "name": "@ilz5753/rnmd",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "React Native Markdown Editor and View",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
@@ -169,7 +169,7 @@
     "react-native-code-highlighter": "^1.2.2",
     "react-native-error-boundary": "^1.2.4",
     "react-native-gesture-handler": "^2.14.1",
-    "react-native-reanimated": "~3.3.0",
+    "react-native-reanimated": "^3.6.1",
     "react-native-svg": "^14.1.0",
     "react-syntax-highlighter": "^15.5.0",
     "simple-markdown": "^0.7.3"
