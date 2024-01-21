@@ -4,15 +4,57 @@ RNMD is a React Native module that allows seamless integration of a Markdown edi
 
 **Important: This is the first version (v1.0.0) of RNMD. While it is feature-complete for basic usage, we are actively working on updates to improve performance and enhance the user interface. Expect regular updates and improvements in future releases.**
 
+## Screenshots
+
+Here are some screenshots showcasing the features of RNMD:
+
+<table>
+<tr>
+<td>
+<img src="./screenshots/Simulator Screen Shot - iPhone 14 Pro Max - 2024-01-21 at 04.16.49.png" style="flex:1;" />
+</td>
+<td>
+<img src="./screenshots/Simulator Screen Shot - iPhone 14 Pro Max - 2024-01-21 at 04.17.39.png" style="flex:1;" />
+</td>
+<td>
+<img src="./screenshots/Simulator Screen Shot - iPhone 14 Pro Max - 2024-01-21 at 04.17.06.png" style="flex:1;" />
+</td>
+</tr>
+<tr>
+<td>
+<img src="./screenshots/Simulator Screen Shot - iPhone 14 Pro Max - 2024-01-21 at 04.16.37.png" style="flex:1;" />
+</td>
+<td>
+<img src="./screenshots/Simulator Screen Shot - iPhone 14 Pro Max - 2024-01-21 at 04.18.14.png" style="flex:1;" />
+</td>
+<td>
+<img src="./screenshots/Simulator Screen Shot - iPhone 14 Pro Max - 2024-01-21 at 04.18.24.png" style="flex:1;" />
+</td>
+</tr>
+<tr>
+<td>
+<img src="./screenshots/Simulator Screen Shot - iPhone 14 Pro Max - 2024-01-21 at 04.18.31.png" style="flex:1;" />
+</td>
+<td>
+<img src="./screenshots/Simulator Screen Shot - iPhone 14 Pro Max - 2024-01-21 at 04.19.24.png" style="flex:1;" />
+</td>
+<td>
+<img src="./screenshots/Simulator Screen Shot - iPhone 14 Pro Max - 2024-01-21 at 04.19.34.png" style="flex:1;" />
+</td>
+</tr>
+</table>
+
+Feel free to explore and visualize the RNMD module through these screenshots.
+
 ## Thanks
 
 Special thanks to the creators of [react-native-markdown](https://github.com/lwansbrough/react-native-markdown) for their excellent work. RNMD leverages the foundation laid by react-native-markdown to provide a rich Markdown editing and preview experience in React Native.
 
-## Example Videos
+<!-- ## Example Videos
 
 vertical | horizontal - ltr | horizontal - rtl
 :---: | :---: | :---:
- [Vertical Preview](https://www.dropbox.com/scl/fi/x1r2rapyhbijafk7krliq/Simulator-Screen-Recording-iPhone-14-Pro-Max-2024-01-20-at-03.39.42.mp4?rlkey=nhrnoafw28ca9bqkjfevkugin&dl=0) | [Horizontal Preview - left to right direction](https://www.dropbox.com/scl/fi/yokpu0qujubtdwiso1sjb/Simulator-Screen-Recording-iPhone-14-Pro-Max-2024-01-20-at-03.36.54.mp4?rlkey=89f0czq4xdxnudydlv03lw0p5&dl=0) | [Horizontal Preview - right to left direction](https://www.dropbox.com/scl/fi/bnrnbj4pb6dzjaxuig8ml/Simulator-Screen-Recording-iPhone-14-Pro-Max-2024-01-20-at-03.38.25.mp4?rlkey=51i90gfwxal4nr4lnay9siaxw&dl=0)
+ [Vertical Preview](https://www.dropbox.com/scl/fi/x1r2rapyhbijafk7krliq/Simulator-Screen-Recording-iPhone-14-Pro-Max-2024-01-20-at-03.39.42.mp4?rlkey=nhrnoafw28ca9bqkjfevkugin&dl=0) | [Horizontal Preview - left to right direction](https://www.dropbox.com/scl/fi/yokpu0qujubtdwiso1sjb/Simulator-Screen-Recording-iPhone-14-Pro-Max-2024-01-20-at-03.36.54.mp4?rlkey=89f0czq4xdxnudydlv03lw0p5&dl=0) | [Horizontal Preview - right to left direction](https://www.dropbox.com/scl/fi/bnrnbj4pb6dzjaxuig8ml/Simulator-Screen-Recording-iPhone-14-Pro-Max-2024-01-20-at-03.38.25.mp4?rlkey=51i90gfwxal4nr4lnay9siaxw&dl=0) -->
 
 ## Installation
 
