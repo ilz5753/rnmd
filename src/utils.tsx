@@ -1,5 +1,5 @@
 import type { ImageStyle, StyleProp, TextStyle, ViewStyle } from 'react-native';
-import { Linking, Platform } from 'react-native';
+import { Linking, Platform, StyleSheet } from 'react-native';
 // import { cloneDeep } from 'lodash';
 
 export const ReClamp = (value: number, min: number, max: number) => {
@@ -7,6 +7,8 @@ export const ReClamp = (value: number, min: number, max: number) => {
   return Math.min(max, Math.max(min, value));
 };
 export const isAndroid = Platform.OS === 'android';
+// type _Text = 'autolink' | 'blockQuote' | '';
+// type _View = 'br' | 'hr';
 export type TMDPreviewTag =
   | 'Array'
   | 'heading'
@@ -40,13 +42,14 @@ export type TMDPreviewTag =
 export type TMDStyles = Partial<
   Record<TMDPreviewTag, StyleProp<TextStyle | ViewStyle | ImageStyle>>
 >;
-export const DefaultMDPreviewStyles = {
+export const DefaultMDPreviewStyles = StyleSheet.create({
   codeBlock: {
     // fontFamily: 'Courier',
     fontWeight: '500',
   },
   del: {
-    backgroundColor: '#222222',
+    // backgroundColor: '#222222',
+    textDecorationLine: 'line-through',
   },
   em: {
     fontStyle: 'italic',
@@ -55,21 +58,27 @@ export const DefaultMDPreviewStyles = {
     fontWeight: '200',
   },
   heading1: {
+    fontWeight: '900',
     fontSize: 32,
   },
   heading2: {
+    fontWeight: '800',
     fontSize: 24,
   },
   heading3: {
+    fontWeight: '700',
     fontSize: 18,
   },
   heading4: {
+    fontWeight: '600',
     fontSize: 16,
   },
   heading5: {
+    fontWeight: '500',
     fontSize: 13,
   },
   heading6: {
+    fontWeight: '400',
     fontSize: 11,
   },
   hr: {
@@ -81,16 +90,19 @@ export const DefaultMDPreviewStyles = {
     width: 50, // TODO: React Native needs to support auto image size
   },
   inlineCode: {
-    backgroundColor: '#eeeeee',
-    borderColor: '#dddddd',
+    // backgroundColor: '#eeeeee',
+    // borderColor: '#dddddd',
     borderRadius: 3,
     borderWidth: 1,
     // fontFamily: 'Courier',
     fontWeight: 'bold',
+    color: 'white',
+    paddingHorizontal: 2,
   },
   list: {},
   listItem: {
     flexDirection: 'row',
+    gap: 1,
   },
   listItemBullet: {
     fontSize: 20,
@@ -116,7 +128,7 @@ export const DefaultMDPreviewStyles = {
     borderRadius: 3,
   },
   tableHeader: {
-    backgroundColor: '#222222',
+    // backgroundColor: '#222222',
     flexDirection: 'row',
     justifyContent: 'space-around',
   },
@@ -156,7 +168,53 @@ export const DefaultMDPreviewStyles = {
   url: {
     color: '#0047ff',
   },
-};
+});
 export const SafeOpenUrl = async (url: string) => {
   if (await Linking.canOpenURL(url)) await Linking.openURL(url);
+};
+/**
+ * **Todo:** implement other `languages formats` for better code visualization.
+ */
+export const getLanguageName = (lang = 'tsx') => {
+  let l = 'plaintext';
+  switch (lang) {
+    case 'ts':
+    case 'typescript':
+    case 'tsx':
+      l = 'typescript';
+      break;
+    case 'js':
+    case 'javascript':
+    case 'jsx':
+      l = 'javascript';
+      break;
+    case 'sh':
+    case 'bash':
+      l = 'bash';
+      break;
+    case 'md':
+    case 'markdown':
+      l = 'markdown';
+      break;
+    case 'py':
+    case 'python':
+      l = 'python';
+      break;
+    case 'c++':
+    case 'cpp':
+      l = 'cpp';
+      break;
+    case 'objective-c':
+    case 'obj-c':
+      l = 'objective-c';
+      break;
+    case 'java':
+    case 'go':
+    case 'c':
+      l = lang;
+      break;
+    default:
+      break;
+  }
+  return l;
 };

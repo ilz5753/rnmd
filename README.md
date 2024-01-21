@@ -75,6 +75,7 @@ If you are interested in staying updated on the progress of RNMD or contributing
 ## Usage
 
 ### MDEditor
+
 Import the `MDEditor` and register as new screen via react-navigation or your navigation strategy and navigate to it through `navigate` function
 
 ```tsx
@@ -116,11 +117,21 @@ function UserReadMe() {
     <MDPreview
       {...{
         md: `# Project
-        hey, this is my first repo readme!
-        [test link](https://example.com)
-        **Bold**
-        *italic text*
-        `
+
+hey, this is my first repo readme!
+
+[test link](https://example.com)
+
+**Bold**
+
+*italic text*
+
+> Testing block quotes
+
+>> nested quotes
+
+>>> interested to more nesting?
+`,
       }}
     />
   );

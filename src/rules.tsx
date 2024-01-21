@@ -1,14 +1,34 @@
-// import Clipboard from '@react-native-clipboard/clipboard';
+import Clipboard from '@react-native-clipboard/clipboard';
 import { map } from 'lodash';
 import React from 'react';
 import { TouchableOpacity } from 'react-native';
 import CodeHighlighter from 'react-native-code-highlighter';
 import Animated from 'react-native-reanimated';
-// eslint-disable-next-line
 import { atomOneDarkReasonable } from 'react-syntax-highlighter/dist/esm/styles/hljs';
 import { Icons } from './Icons';
-import { SafeOpenUrl } from './utils';
-export function MDPreviewRules(styles: any) {
+import { SafeOpenUrl, getLanguageName } from './utils';
+export interface IMDPreviewRulesColors {
+  codeBlockBg?: string;
+  codeBlockHeaderBorderBottom?: string;
+  codeBlockHeaderLanguage?: string;
+  codeBlockHeaderCopyIcon?: string;
+  blockQuoteBg?: string;
+  blockQuoteBorderLeft?: string;
+  inlineCodeBg?: string;
+}
+export function MDPreviewRules(
+  styles: any,
+  colors: IMDPreviewRulesColors = {}
+) {
+  let {
+    codeBlockBg = '#161B22',
+    codeBlockHeaderBorderBottom = 'gray',
+    codeBlockHeaderCopyIcon = 'gray',
+    codeBlockHeaderLanguage = 'gray',
+    blockQuoteBg = '#f9f9f9',
+    blockQuoteBorderLeft = '#cccccc',
+    inlineCodeBg = '#161B22',
+  } = colors;
   return {
     autolink: {
       react({ content, target }: any, output: any, state: any) {
@@ -29,14 +49,30 @@ export function MDPreviewRules(styles: any) {
       react({ content }: any, output: any, state: any) {
         state.withinText = true;
         return (
-          <Animated.Text {...{ key: state.key, style: styles.blockQuote }}>
+          <Animated.View
+            {...{
+              key: state.key,
+              style: [
+                {
+                  width: '100%',
+                  marginVertical: 8,
+                  paddingHorizontal: 8,
+                  backgroundColor: blockQuoteBg,
+                  // borderRadius: 16,
+                  borderLeftWidth: 3,
+                  borderLeftColor: blockQuoteBorderLeft,
+                },
+              ],
+            }}
+          >
             {output(content, state)}
-          </Animated.Text>
+          </Animated.View>
         );
       },
     },
     br: {
       react(_: any, __: any, state: any) {
+        // return <Animated.View {...{ key: state.key, style: styles.br }} />;
         return (
           <Animated.Text {...{ key: state.key, style: styles.br }}>
             {'\n\n'}
@@ -46,24 +82,28 @@ export function MDPreviewRules(styles: any) {
     },
     codeBlock: {
       react({ content, lang }: any, _: any, state: any) {
-        // console.log(node);
+        let language = getLanguageName(lang);
         state.withinText = true;
         let onPress = () => {
-          // Clipboard.setString(content);
+          Clipboard.setString(content);
         };
         return (
           <Animated.View
             {...{
               key: state.key,
               style: [
-                { width: '100%', paddingHorizontal: 20, marginVertical: 10 },
+                { width: '100%', paddingHorizontal: 8, marginVertical: 4 },
               ],
             }}
           >
             <Animated.View
               {...{
                 style: [
-                  { backgroundColor: '#161B22', borderRadius: 20, padding: 16 },
+                  {
+                    backgroundColor: codeBlockBg,
+                    borderRadius: 16,
+                    padding: 12,
+                  },
                 ],
               }}
             >
@@ -71,7 +111,7 @@ export function MDPreviewRules(styles: any) {
                 {...{
                   style: [
                     {
-                      borderBottomColor: 'gray',
+                      borderBottomColor: codeBlockHeaderBorderBottom,
                       borderBottomWidth: 1.5,
                       flexDirection: 'row',
                       alignItems: 'center',
@@ -79,41 +119,37 @@ export function MDPreviewRules(styles: any) {
                       paddingBottom: 8,
                       marginBottom: 8,
                     },
+                    styles.codeBlockHeaderBorder,
                   ],
                 }}
               >
                 <Animated.Text
-                  {...{ style: { fontSize: 13.5, color: 'gray' } }}
+                  {...{
+                    style: { fontSize: 13.5, color: codeBlockHeaderLanguage },
+                  }}
                 >
-                  {lang}
+                  {language}
                 </Animated.Text>
                 <TouchableOpacity {...{ activeOpacity: 0.72, onPress }}>
-                  <Icons.CopyIcon {...{ color: 'gray' }} />
+                  <Icons.CopyIcon {...{ color: codeBlockHeaderCopyIcon }} />
                 </TouchableOpacity>
               </Animated.View>
               <CodeHighlighter
                 hljsStyle={atomOneDarkReasonable}
                 textStyle={[styles.codeBlock]}
-                scrollViewProps={{ contentContainerStyle: { width: '100%' } }}
-                language={lang}
+                scrollViewProps={{
+                  contentContainerStyle: {
+                    width: '100%',
+                    backgroundColor: codeBlockBg,
+                  },
+                }}
+                language={language}
               >
                 {content}
               </CodeHighlighter>
-              {/* <Animated.Text
-                {...{
-                  style: [{ fontSize: 13.5, color: 'white' }, styles.codeBlock],
-                }}
-              >
-                {content}
-              </Animated.Text> */}
             </Animated.View>
           </Animated.View>
         );
-        // return (
-        //   <Animated.Text {...{ key: state.key, style: styles.codeBlock }}>
-        //     {/* {output(content, state)} */}
-        //   </Animated.Text>
-        // );
       },
     },
     del: {
@@ -173,13 +209,13 @@ export function MDPreviewRules(styles: any) {
       react({ content }: any, _: any, state: any) {
         state.withinText = true;
         return (
-          <CodeHighlighter
-            key={state.key}
-            hljsStyle={atomOneDarkReasonable}
-            textStyle={[styles.inlineCode]}
+          <Animated.View
+            {...{ key: state.key, style: { backgroundColor: inlineCodeBg } }}
           >
-            {content}
-          </CodeHighlighter>
+            <Animated.Text {...{ style: [styles.inlineCode] }}>
+              {content}
+            </Animated.Text>
+          </Animated.View>
         );
       },
     },
@@ -191,13 +227,6 @@ export function MDPreviewRules(styles: any) {
           <TouchableOpacity
             {...{ key: state.key, activeOpacity: 0.72, onPress }}
           >
-            {/* {isString(content) ? (
-              <Animated.Text {...{ style: styles.link }}>
-                {content}
-              </Animated.Text>
-            ) : (
-              output(content, state)
-            )} */}
             <Animated.Text {...{ style: styles.link }}>
               {output(content, state)}
             </Animated.Text>
@@ -275,7 +304,9 @@ export function MDPreviewRules(styles: any) {
       react({ header, cells }: any, output: any, state: any) {
         let headers = map(header, (content, key: any) => {
           return (
-            <Animated.Text {...{ key, style: styles.strong }}>
+            <Animated.Text
+              {...{ key, style: [styles.strong, { paddingHorizontal: 16 }] }}
+            >
               {output(content, state)}
             </Animated.Text>
           );
@@ -303,10 +334,14 @@ export function MDPreviewRules(styles: any) {
           );
         });
         return (
-          <Animated.View {...{ key: state.key, style: styles.table }}>
-            {_header}
-            {rows}
-          </Animated.View>
+          <Animated.ScrollView
+            {...{ key: state.key, style: styles.table, horizontal: true }}
+          >
+            <Animated.View>
+              {_header}
+              {rows}
+            </Animated.View>
+          </Animated.ScrollView>
         );
       },
     },

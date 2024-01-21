@@ -27,11 +27,10 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { Icons } from './Icons';
+import { MDPreview, type IMDPreview } from './MDPreview';
 import useKeyboard from './useKeyboard';
 import { ReClamp, isAndroid } from './utils';
-import { MDPreview } from './MDPreview';
-// import { MDRegexes } from './constants';
-// import { type IRegexes } from './utils';
+
 export type TMDEditorPadSize = 'x' | 'xx' | 'xxx';
 export interface IPress {
   onPress?(): void;
@@ -80,6 +79,7 @@ export interface IMDEditorColors {
 export interface IMDEditorInput {
   fontSize?: number;
 }
+export type TMDEditorPreview = Omit<IMDPreview, 'md'>;
 export interface IMDEditor {
   /**
    * colors object
@@ -91,10 +91,12 @@ export interface IMDEditor {
   horizontal?: boolean;
   /**
    * Top Safe Area View Height size
+   * @default 48
    */
   topSavHeight?: number;
   /**
    * Bottom Safe Area View Height size
+   * @default 34
    */
   bottomSavHeight?: number;
   /**
@@ -112,14 +114,9 @@ export interface IMDEditor {
   isRTL?: boolean;
   header: IMDEditorHeader;
   editorConfig?: IMDEditorInput;
+  previewConfig?: TMDEditorPreview;
 }
 
-// let regexes: IRegexes[] = [
-//   {
-//     regex: MDRegexes.boldText,
-//     textStyle: [{ fontSize: 24, fontWeight: 'bold', lineHeight: 16 }],
-//   },
-// ];
 export function MDEditor({
   colors,
   horizontal = false,
@@ -131,6 +128,7 @@ export function MDEditor({
   header,
   isRTL = false,
   editorConfig = {},
+  previewConfig = {},
 }: IMDEditor) {
   let {
     wrapperBg = '#ffffff',
@@ -260,7 +258,7 @@ export function MDEditor({
   /**
    * release text updating by inner TextInput instance and make better functionality
    *
-   * useful in: **onSubmitEditting**, **onBlur**
+   * useful for: **onSubmitEditting**, **onBlur**
    */
   let onFinishEditing = useCallback(() => {
     fromInside.current = false;
@@ -268,12 +266,6 @@ export function MDEditor({
   useEffect(() => {
     if (!fromInside.current) onChangeText(text);
   }, [text]);
-  // useEffect(() => {
-  //   if (!horizontal) {
-  //     panHeight.value = withTiming(_hThrid_.value);
-  //     panHeightHelp.value = _hThrid_.value;
-  //   }
-  // }, [horizontal]);
   let fd: any = useMemo(
     () => ({ flexDirection: `row${isRTL ? '-reverse' : ''}` }),
     [isRTL]
@@ -350,7 +342,7 @@ export function MDEditor({
     return icon;
   }, [leftBtn, isRTL]);
   /** */
-  let Preview = useMemo(
+  let PreviewIcon = useMemo(
     () => (showPreview ? Icons.EyeCloseIcon : Icons.EyeOpenIcon),
     [showPreview]
   );
@@ -436,8 +428,8 @@ export function MDEditor({
     [horizontal, h, pad, showPreview]
   );
   let P = useMemo(
-    () => <MDPreview {...{ md: value, colors: { bg: 'orange' } }} />,
-    [value]
+    () => <MDPreview {...{ md: value, ...previewConfig }} />,
+    [value, previewConfig]
   );
   return (
     <KeyboardAvoidingView
@@ -542,7 +534,7 @@ export function MDEditor({
                   onPress: togglePreview,
                 }}
               >
-                <Preview
+                <PreviewIcon
                   {...{
                     color: showPreview
                       ? headerPreviewDisabledIcon
