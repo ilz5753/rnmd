@@ -347,10 +347,20 @@ export function MDEditor({
     [showPreview]
   );
   let PanXBg = useAnimatedStyle(() => ({
+    transform: [
+      {
+        translateX: panWidth.value,
+      },
+    ],
     backgroundColor: withTiming(activeX.value ? activePanBg : panBg),
     opacity: withTiming(showPreview ? 1 : 0.5),
   }));
   let PanYBg = useAnimatedStyle(() => ({
+    transform: [
+      {
+        translateX: panHeight.value,
+      },
+    ],
     backgroundColor: withTiming(activeY.value ? activePanBg : panBg),
     opacity: withTiming(showPreview ? 1 : 0.5),
   }));
@@ -397,6 +407,7 @@ export function MDEditor({
               fontSize: editorFontSize,
               color: editorTextColor,
               backgroundColor: editorBg,
+              textAlignVertical: 'top',
             },
           ],
           multiline: true,
