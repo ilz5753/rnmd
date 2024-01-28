@@ -349,7 +349,7 @@ export function MDEditor({
   let PanXBg = useAnimatedStyle(() => ({
     transform: [
       {
-        translateX: panWidth.value,
+        translateX: panWidth.value - (isRTL ? -maxW : wThrid),
       },
     ],
     backgroundColor: withTiming(activeX.value ? activePanBg : panBg),
@@ -358,7 +358,7 @@ export function MDEditor({
   let PanYBg = useAnimatedStyle(() => ({
     transform: [
       {
-        translateY: panHeight.value,
+        translateY: panHeight.value - _hThrid_.value,
       },
     ],
     backgroundColor: withTiming(activeY.value ? activePanBg : panBg),
