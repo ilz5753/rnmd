@@ -238,7 +238,9 @@ export function MDPreviewRules(
       react({ items, ordered }: any, output: any, state: any) {
         let _items = map(items, (item, key) => {
           let bullet = (
-            <Animated.Text {...{ style: [styles['listItemNumber']] }}>
+            <Animated.Text
+              {...{ style: [{ color: 'black' }, styles['listItemNumber']] }}
+            >
               {ordered ? `${key + 1}. ` : '\u2022'}
             </Animated.Text>
           );
@@ -305,7 +307,14 @@ export function MDPreviewRules(
         let headers = map(header, (content, key: any) => {
           return (
             <Animated.Text
-              {...{ key, style: [styles.strong, { paddingHorizontal: 16 }] }}
+              {...{
+                key,
+                style: [
+                  { color: 'black' },
+                  styles.strong,
+                  { paddingHorizontal: 16 },
+                ],
+              }}
             >
               {output(content, state)}
             </Animated.Text>

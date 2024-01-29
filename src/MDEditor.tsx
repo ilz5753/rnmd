@@ -14,11 +14,11 @@ import {
   TouchableOpacity,
   useWindowDimensions,
 } from 'react-native';
+import ErrorBoundary from 'react-native-error-boundary';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   FadeInUp,
   FadeOutUp,
-  Layout,
   runOnJS,
   useAnimatedReaction,
   useAnimatedStyle,
@@ -116,8 +116,14 @@ export interface IMDEditor {
   editorConfig?: IMDEditorInput;
   previewConfig?: TMDEditorPreview;
 }
-
-export function MDEditor({
+let _wz = 0.2;
+let _wh = 0.36;
+let minMultiplier = (n = 1) => n * _wz;
+let minWorkletMultiplier = (n = 1) => {
+  'worklet';
+  return n * _wh;
+};
+export function MDEditorRender({
   colors,
   horizontal = false,
   topSavHeight = 48,
@@ -130,6 +136,16 @@ export function MDEditor({
   editorConfig = {},
   previewConfig = {},
 }: IMDEditor) {
+  /**
+   * updates is from this instance (MDEditor or better TextInput) or not
+   */
+  let fromInside = useRef(false);
+  let [value, onChangeText] = useState('');
+  let [search, setSearch] = useState('');
+  let [showPreview, setShowPreview] = useState(true);
+  let [showSearch, setShowSearch] = useState(false);
+  let activeX = useSharedValue(false);
+  let activeY = useSharedValue(false);
   let {
     wrapperBg = '#ffffff',
     headerBg = '#ffffff',
@@ -160,9 +176,6 @@ export function MDEditor({
     height: hHeight,
   } = header;
   let { fontSize: editorFontSize = 16 } = editorConfig;
-  // let z = useMemo(() => (isRTL ? -1 : 1), [isRTL]);
-  let { width: w, height: h } = useWindowDimensions();
-  let { keyboardHeight, keyboardIsActive } = useKeyboard();
   let pad = useMemo(() => {
     let size = 12;
     switch (paddingSize) {
@@ -177,14 +190,25 @@ export function MDEditor({
     }
     return size;
   }, [paddingSize]);
-  let hPad = useMemo(() => pad / 2, [pad]);
+  let uGap = useMemo(() => ({ gap: pad }), [pad]);
+  let _Pad = useMemo(() => ({ padding: 8 }), []);
   let gap = useMemo(() => ({ gap: pad / 3 }), [pad]);
+  let fd: any = useMemo(
+    () => ({ flexDirection: `row${isRTL ? '-reverse' : ''}` }),
+    [isRTL]
+  );
+  let ta: any = useMemo(
+    () => ({ textAlign: `${isRTL ? 'right' : 'left'}` }),
+    [isRTL]
+  );
   let headerHeight = useMemo(() => {
     let h = hHeight ?? 60;
     if (h < 48) h = 48;
     else if (h > 72) h = 72;
     return h;
   }, [hHeight]);
+  let { keyboardHeight, keyboardIsActive } = useKeyboard();
+  let { width: w, height: h } = useWindowDimensions();
   let HeaderHeight = useMemo(
     () => topSavHeight + headerHeight,
     [topSavHeight, headerHeight]
@@ -193,65 +217,74 @@ export function MDEditor({
    * bottom safe area view height size
    */
   let bsh = useDerivedValue(
-    () => (keyboardIsActive.value ? 5 : bottomSavHeight),
+    () => (keyboardIsActive.value ? 0 : bottomSavHeight),
     [bottomSavHeight]
   );
+  let spaces = useDerivedValue(() => HeaderHeight + bsh.value, [HeaderHeight]);
+  let _RemainHeight_ = useDerivedValue(
+    () => h - (spaces.value + keyboardHeight.value)
+  );
+  let wp = useMemo(() => w - pad, [w, pad]);
+  let wz = useMemo(() => minMultiplier(wp), [wp]);
+  let mw = useMemo(() => wp - wz, [wp, wz]);
+  let hp = useDerivedValue(() => _RemainHeight_.value - pad);
+  let hz = useDerivedValue(() => minWorkletMultiplier(hp.value));
+  let mh = useDerivedValue(() => hp.value - hz.value);
+  let BG = useAnimatedStyle(() => ({
+    backgroundColor: wrapperBg,
+  }));
   let bshStyle = useAnimatedStyle(() => ({
     height: bsh.value,
   }));
-  let spaces = useDerivedValue(() => HeaderHeight + bsh.value, [HeaderHeight]);
-  let _RemainHeight_ = useDerivedValue(
-    () => h - (spaces.value + keyboardHeight.value),
-    [h]
+  let dx = useSharedValue(wp / 2);
+  let hdx = useSharedValue(wp / 2);
+  let dy = useSharedValue(0);
+  let hdy = useSharedValue(0);
+  let gx = useMemo(
+    () =>
+      Gesture.Pan()
+        .onUpdate(({ translationX }) => {
+          dx.value = ReClamp(translationX + hdx.value, wz, mw);
+        })
+        .onEnd(() => {
+          hdx.value = dx.value;
+        })
+        .enabled(showPreview),
+    [wz, mw, showPreview]
   );
-  /**
-   * updates is from this instance (MDEditor or better TextInput) or not
-   */
-  let fromInside = useRef(false);
-  let [value, onChangeText] = useState('');
-  let [search, setSearch] = useState('');
-  let [showPreview, setShowPreview] = useState(true);
-  let [showSearch, setShowSearch] = useState(false);
-  let activeX = useSharedValue(false);
-  let activeY = useSharedValue(false);
-  let wThrid = useMemo(() => w * 0.2, [w]);
-  let _hThrid_ = useDerivedValue(() => _RemainHeight_.value * 0.2);
-  let _hThrid_sup = useDerivedValue(() => _RemainHeight_.value * 0.8);
-  let maxW = useMemo(() => w - wThrid - pad, [w, wThrid, pad]);
-  let panWidth = useSharedValue(wThrid);
-  let panHeight = useSharedValue(0);
-  let panWidthHelp = useSharedValue(wThrid);
-  let panHeightHelp = useSharedValue(0);
-  let gx = Gesture.Pan()
-    .onStart(() => {
-      activeX.value = true;
-    })
-    .onUpdate(({ translationX }) => {
-      let sum = translationX + panWidthHelp.value;
-      if (isRTL) panWidth.value = ReClamp(sum, -maxW, -wThrid);
-      else panWidth.value = ReClamp(sum, wThrid, maxW);
-    })
-    .onEnd(() => {
-      panWidthHelp.value = panWidth.value;
-      activeX.value = false;
-    })
-    .enabled(showPreview);
-  let gy = Gesture.Pan()
-    .onStart(() => {
-      activeY.value = true;
-    })
-    .onUpdate(({ translationY }) => {
-      panHeight.value = ReClamp(
-        translationY + panHeightHelp.value,
-        _hThrid_.value,
-        _hThrid_sup.value - pad
-      );
-    })
-    .onEnd(() => {
-      panHeightHelp.value = panHeight.value;
-      activeY.value = false;
-    })
-    .enabled(showPreview);
+  let gy = useMemo(
+    () =>
+      Gesture.Pan()
+        .onUpdate(({ translationY }) => {
+          dy.value = ReClamp(translationY + hdy.value, hz.value, mh.value);
+        })
+        .onEnd(() => {
+          hdy.value = dy.value;
+        })
+        .enabled(showPreview),
+    [showPreview]
+  );
+  let horHeight: any = useMemo(
+    () => ({
+      height: '100%',
+    }),
+    []
+  );
+  let horLowWidth = useAnimatedStyle(() => ({
+    width: dx.value,
+  }));
+  let horMaxWidth = useAnimatedStyle(() => ({
+    width: w - dx.value,
+  }));
+  let verLowHeight = useAnimatedStyle(() => ({
+    height: dy.value,
+  }));
+  let verMaxHeight = useAnimatedStyle(() => ({
+    height: hp.value - dy.value,
+  }));
+  useEffect(() => {
+    if (!fromInside.current) onChangeText(text);
+  }, [text]);
   let onFocus = useCallback(() => {
     fromInside.current = true;
   }, []);
@@ -263,106 +296,48 @@ export function MDEditor({
   let onFinishEditing = useCallback(() => {
     fromInside.current = false;
   }, []);
-  useEffect(() => {
-    if (!fromInside.current) onChangeText(text);
-  }, [text]);
-  let fd: any = useMemo(
-    () => ({ flexDirection: `row${isRTL ? '-reverse' : ''}` }),
-    [isRTL]
+  let ti = useMemo(
+    () => (
+      <TextInput
+        {...{
+          value,
+          onChangeText,
+          onFocus,
+          onBlur: onFinishEditing,
+          onSubmitEditing: onFinishEditing,
+          style: [
+            styles.f1,
+            {
+              fontSize: editorFontSize,
+              color: editorTextColor,
+              backgroundColor: editorBg,
+              textAlignVertical: 'top',
+            },
+          ],
+          multiline: true,
+        }}
+      />
+    ),
+    [value, editorFontSize, editorBg, editorTextColor]
   );
-  let ta: any = useMemo(
-    () => ({ textAlign: `${isRTL ? 'right' : 'left'}` }),
-    [isRTL]
-  );
-  let togglePreview = useCallback(() => {
-    let sp = !showPreview;
-    if (horizontal) {
-      let wp = w - pad;
-      let z = isRTL ? -1 : 1;
-      let mw = z * wp;
-      if (sp) mw = z * wThrid;
-      panWidth.value = withTiming(mw, undefined, (f) => {
-        if (f) runOnJS(setShowPreview)(sp);
-      });
-      panWidthHelp.value = mw;
-    } else {
-      let mh = _RemainHeight_.value - pad;
-      if (sp)
-        mh = keyboardIsActive.value
-          ? h - (spaces.value + keyboardHeight.value + pad + _hThrid_.value)
-          : _hThrid_.value;
-      panHeight.value = withTiming(mh, undefined, (f) => {
-        if (f) runOnJS(setShowPreview)(sp);
-      });
-      panHeightHelp.value = mh;
-    }
-  }, [horizontal, showPreview, w, pad, wThrid, isRTL, h]);
-  let toggleSearch = useCallback(() => {
-    setShowSearch((s) => !s);
-  }, []);
-  let BG = useMemo(() => ({ backgroundColor: wrapperBg }), [wrapperBg]);
-  let _Pad = useMemo(() => ({ padding: hPad }), [hPad]);
-  let horHeight = useAnimatedStyle(() => ({
-    height: _RemainHeight_.value,
-  }));
-  let horInput = useAnimatedStyle(() => ({
-    width: Math.abs(panWidth.value),
-  }));
-  let horMd = useAnimatedStyle(() => ({
-    width: w - (pad + Math.abs(panWidth.value)),
-  }));
-  let verInput = useAnimatedStyle(() => ({
-    height: panHeight.value,
-  }));
-  let verMd = useAnimatedStyle(() => ({
-    height: _RemainHeight_.value - (pad + panHeight.value),
-  }));
-  /**
-   * header left color
-   */
-  let hlc = useMemo(
-    () => (leftBtn === 'close' ? headerCloseIcon : headerBackIcon),
-    [leftBtn, headerBackIcon, headerCloseIcon]
-  );
-  /**
-   * header left icon
-   */
-  let Hli = useMemo(() => {
-    let icon = isRTL ? Icons.ChevronRightIcon : Icons.ChevronLeftIcon;
-    switch (leftBtn) {
-      case 'back-arrow':
-        icon = isRTL ? Icons.ArrowRightIcon : Icons.ArrowLeftIcon;
-        break;
-      case 'close':
-        icon = Icons.CloseIcon;
-        break;
-      default:
-        break;
-    }
-    return icon;
-  }, [leftBtn, isRTL]);
-  /** */
-  let PreviewIcon = useMemo(
-    () => (showPreview ? Icons.EyeCloseIcon : Icons.EyeOpenIcon),
-    [showPreview]
+  let P = useMemo(
+    () => <MDPreview {...{ md: value, ...previewConfig }} />,
+    [value, previewConfig]
   );
   let PanXBg = useAnimatedStyle(() => ({
-    transform: [
-      {
-        translateX: panWidth.value - (isRTL ? -maxW : wThrid),
-      },
-    ],
+    // transform: [
+    //   {
+    //     translateX: dx.value,
+    //   },
+    // ],
+    [isRTL ? 'right' : `left`]: dx.value - (isRTL ? pad : 0),
     backgroundColor: withTiming(activeX.value ? activePanBg : panBg),
     opacity: withTiming(showPreview ? 1 : 0.5),
   }));
   let PanYBg = useAnimatedStyle(() => ({
-    transform: [
-      {
-        translateY: panHeight.value - _hThrid_.value,
-      },
-    ],
     backgroundColor: withTiming(activeY.value ? activePanBg : panBg),
     opacity: withTiming(showPreview ? 1 : 0.5),
+    top: dy.value,
   }));
   let PanXShadow = useAnimatedStyle(() => ({
     shadowColor: withTiming(
@@ -392,65 +367,100 @@ export function MDEditor({
   let DragYBg = useAnimatedStyle(() => ({
     backgroundColor: withTiming(activeY.value ? activePanDragBg : panDragView),
   }));
-  let ti = useMemo(
-    () => (
-      <TextInput
-        {...{
-          value,
-          onChangeText,
-          onFocus,
-          onBlur: onFinishEditing,
-          onSubmitEditing: onFinishEditing,
-          style: [
-            styles.f1,
-            {
-              fontSize: editorFontSize,
-              color: editorTextColor,
-              backgroundColor: editorBg,
-              textAlignVertical: 'top',
-            },
-          ],
-          multiline: true,
-        }}
-      />
-    ),
-    [value, editorFontSize, editorBg, editorTextColor]
-  );
-  let save = useCallback(() => {
-    if (onSubmitText) onSubmitText(value);
-  }, [onSubmitText, value]);
   useAnimatedReaction(
-    () => keyboardHeight.value,
-    (kh) => {
+    () => hp.value,
+    (hpv) => {
       if (!horizontal) {
+        let hzv = minWorkletMultiplier(hpv);
         if (showPreview) {
-          let s = spaces.value + kh + pad + _hThrid_.value;
-          let y = kh === 0 ? _hThrid_.value : h - s;
-          panHeight.value = withTiming(y);
-          panHeightHelp.value = y;
+          dy.value = withTiming(hzv);
+          hdy.value = hzv;
         } else {
-          let s = spaces.value + kh + pad + (kh === 0 ? _hThrid_.value : 0);
-          let y = kh === 0 ? _RemainHeight_.value - pad : h - s;
-          panHeight.value = withTiming(y);
-          panHeightHelp.value = y;
+          dy.value = withTiming(hpv);
+          hdy.value = hpv;
         }
       }
     },
-    [horizontal, h, pad, showPreview]
+    [horizontal, showPreview]
   );
-  let P = useMemo(
-    () => <MDPreview {...{ md: value, ...previewConfig }} />,
-    [value, previewConfig]
+  /**
+   * header left color
+   */
+  let hlc = useMemo(
+    () => (leftBtn === 'close' ? headerCloseIcon : headerBackIcon),
+    [leftBtn, headerBackIcon, headerCloseIcon]
   );
+  /**
+   * header left icon
+   */
+  let Hli = useMemo(() => {
+    let icon = isRTL ? Icons.ChevronRightIcon : Icons.ChevronLeftIcon;
+    switch (leftBtn) {
+      case 'back-arrow':
+        icon = isRTL ? Icons.ArrowRightIcon : Icons.ArrowLeftIcon;
+        break;
+      case 'close':
+        icon = Icons.CloseIcon;
+        break;
+      default:
+        break;
+    }
+    return icon;
+  }, [leftBtn, isRTL]);
+  /** */
+  let PreviewIcon = useMemo(
+    () => (showPreview ? Icons.EyeCloseIcon : Icons.EyeOpenIcon),
+    [showPreview]
+  );
+  let togglePreview = useCallback(() => {
+    let sp = !showPreview;
+    if (horizontal) {
+      let x = sp ? hdx.value : wp;
+      dx.value = withTiming(x, undefined, (f) => {
+        if (f) runOnJS(setShowPreview)(sp);
+      });
+    } else {
+      let y = sp ? hdy.value : hp.value;
+      dy.value = withTiming(y, undefined, (f) => {
+        if (f) runOnJS(setShowPreview)(sp);
+      });
+    }
+    // setShowPreview(sp);
+    // if (horizontal) {
+    //   let wp = w - pad;
+    //   let z = isRTL ? -1 : 1;
+    //   let mw = z * wp;
+    //   if (sp) mw = z * wThrid;
+    //   panWidth.value = withTiming(mw, undefined, f => {
+    //     if (f) runOnJS(setShowPreview)(sp);
+    //   });
+    //   panWidthHelp.value = mw;
+    // } else {
+    //   let mh = _RemainHeight_.value - pad;
+    //   if (sp)
+    //     mh = keyboardIsActive.value
+    //       ? h - (spaces.value + keyboardHeight.value + pad + _hThrid_.value)
+    //       : _hThrid_.value;
+    //   panHeight.value = withTiming(mh, undefined, f => {
+    //     if (f) runOnJS(setShowPreview)(sp);
+    //   });
+    //   panHeightHelp.value = mh;
+    // }
+  }, [horizontal, showPreview, wp]);
+  let toggleSearch = useCallback(() => {
+    setShowSearch((s) => !s);
+  }, []);
+  let save = useCallback(() => {
+    if (onSubmitText) onSubmitText(value);
+  }, [onSubmitText, value]);
   return (
     <KeyboardAvoidingView
-      {...{ style: [styles.f1], behavior: isAndroid ? 'height' : 'padding' }}
+      {...{
+        style: [styles.f1],
+        behavior: isAndroid ? 'height' : 'padding',
+      }}
     >
-      <Animated.View
-        {...{
-          style: [styles.f1, BG],
-        }}
-      >
+      <Animated.View {...{ style: [styles.f1, BG] }}>
         <Animated.View
           {...{
             style: [
@@ -570,20 +580,39 @@ export function MDEditor({
         </Animated.View>
         <Animated.View {...{ style: [styles.f1] }}>
           {horizontal ? (
-            <Animated.View {...{ style: [styles.f1, fd, horHeight] }}>
-              <Animated.View {...{ style: [horInput, _Pad] }}>
+            <Animated.View {...{ style: [styles.f1, fd, uGap] }}>
+              <Animated.View
+                {...{
+                  style: [isRTL ? horMaxWidth : horLowWidth, _Pad, horHeight],
+                }}
+              >
                 {ti}
               </Animated.View>
+              {/* <Animated.View
+                {...{
+                  style: [
+                    {
+                      width: pad,
+                    },
+                    horHeight,
+                  ],
+                }}>
+              </Animated.View> */}
               <GestureDetector {...{ gesture: gx }}>
                 <Animated.View
                   {...{
                     style: [
-                      { width: pad },
-                      // { height: RemainHeight },
-
+                      {
+                        width: pad,
+                        top: 0,
+                      },
+                      horHeight,
+                      // styles.f1,
+                      styles.center,
                       PanBgStyle,
                       PanXBg,
                       PanXShadow,
+                      styles.overlay,
                     ],
                   }}
                 >
@@ -603,27 +632,51 @@ export function MDEditor({
               </GestureDetector>
               <Animated.View
                 {...{
-                  style: [horMd, _Pad],
+                  style: [
+                    isRTL ? horLowWidth : horMaxWidth,
+                    _Pad,
+                    { [`padding${isRTL ? 'Start' : 'End'}`]: pad * 1.5 },
+                    horHeight,
+                  ],
                 }}
               >
                 {P}
               </Animated.View>
             </Animated.View>
           ) : (
-            <Animated.View {...{ style: [styles.f1] }}>
-              <Animated.View {...{ style: [styles.fw, verInput, _Pad] }}>
+            <Animated.View {...{ style: [styles.f1, uGap] }}>
+              <Animated.View
+                {...{
+                  style: [verLowHeight, _Pad, styles.fw],
+                }}
+              >
                 {ti}
               </Animated.View>
+              {/* <Animated.View
+                {...{
+                  style: [
+                    {
+                      height: pad,
+                    },
+                    styles.fw,
+                  ],
+                }}>
+              </Animated.View> */}
               <GestureDetector {...{ gesture: gy }}>
                 <Animated.View
                   {...{
                     style: [
+                      // styles.f1,
+                      {
+                        height: pad,
+                        left: 0,
+                      },
                       styles.fw,
-                      { height: pad },
+                      styles.center,
                       PanBgStyle,
                       PanYBg,
-                      // { borderWidth: 1 },
                       PanYShadow,
+                      styles.overlay,
                     ],
                   }}
                 >
@@ -643,19 +696,13 @@ export function MDEditor({
               </GestureDetector>
               <Animated.View
                 {...{
-                  style: [styles.fw, verMd, _Pad],
+                  style: [verMaxHeight, _Pad, styles.fw],
                 }}
               >
                 {P}
               </Animated.View>
             </Animated.View>
           )}
-          <Animated.View
-            {...{
-              style: [bshStyle, { borderWidth: 1 }],
-            }}
-          />
-          {/* SearchBar */}
           {showSearch && (
             <Animated.View
               {...{
@@ -665,29 +712,24 @@ export function MDEditor({
                   { paddingHorizontal: pad },
                   { top: pad },
                 ],
+                entering: FadeInUp,
+                exiting: FadeOutUp,
               }}
             >
               <Animated.View
                 {...{
                   style: [
-                    // { padding: hPad },
                     styles.searchBr,
                     BG,
-                    // styles.shadowProps,
                     { borderWidth: 1 },
                     fd,
                     styles.aic,
                   ],
-                  entering: FadeInUp,
-                  exiting: FadeOutUp,
-                  layout: Layout,
                 }}
               >
-                {/*  */}
-                {/* <Animated.View></Animated.View> */}
                 <TextInput
                   {...{
-                    style: [styles.f1, styles.searchBr, { padding: hPad }],
+                    style: [styles.f1, styles.searchBr, { padding: pad / 2 }],
                     onChangeText: setSearch,
                     value: search,
                   }}
@@ -696,8 +738,16 @@ export function MDEditor({
             </Animated.View>
           )}
         </Animated.View>
+        <Animated.View {...{ style: [bshStyle] }} />
       </Animated.View>
     </KeyboardAvoidingView>
+  );
+}
+export function MDEditor(props: IMDEditor) {
+  return (
+    <ErrorBoundary>
+      <MDEditorRender {...props} />
+    </ErrorBoundary>
   );
 }
 const styles = StyleSheet.create({

@@ -1,6 +1,7 @@
 import type { IIcon } from './Icons';
 import { Icons } from './Icons';
 import type {
+  IMDEditor,
   IMDEditorColors,
   IMDEditorHeader,
   IMDEditorInput,
@@ -38,6 +39,7 @@ export {
 };
 export type {
   IIcon,
+  IMDEditor,
   IMDEditorColors,
   IMDEditorHeader,
   IMDEditorInput,
