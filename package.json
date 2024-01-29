@@ -1,6 +1,6 @@
 {
   "name": "@ilz5753/rnmd",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "React Native Markdown Editor and View",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",

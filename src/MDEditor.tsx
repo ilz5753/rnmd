@@ -243,11 +243,15 @@ export function MDEditorRender({
   let gx = useMemo(
     () =>
       Gesture.Pan()
+        .onStart(() => {
+          activeX.value = true;
+        })
         .onUpdate(({ translationX }) => {
           dx.value = ReClamp(translationX + hdx.value, wz, mw);
         })
         .onEnd(() => {
           hdx.value = dx.value;
+          activeX.value = false;
         })
         .enabled(showPreview),
     [wz, mw, showPreview]
@@ -255,11 +259,15 @@ export function MDEditorRender({
   let gy = useMemo(
     () =>
       Gesture.Pan()
+        .onStart(() => {
+          activeY.value = true;
+        })
         .onUpdate(({ translationY }) => {
           dy.value = ReClamp(translationY + hdy.value, hz.value, mh.value);
         })
         .onEnd(() => {
           hdy.value = dy.value;
+          activeY.value = false;
         })
         .enabled(showPreview),
     [showPreview]
@@ -325,11 +333,6 @@ export function MDEditorRender({
     [value, previewConfig]
   );
   let PanXBg = useAnimatedStyle(() => ({
-    // transform: [
-    //   {
-    //     translateX: dx.value,
-    //   },
-    // ],
     [isRTL ? 'right' : `left`]: dx.value - (isRTL ? pad : 0),
     backgroundColor: withTiming(activeX.value ? activePanBg : panBg),
     opacity: withTiming(showPreview ? 1 : 0.5),
@@ -606,13 +609,13 @@ export function MDEditorRender({
                         width: pad,
                         top: 0,
                       },
+                      styles.overlay,
                       horHeight,
                       // styles.f1,
                       styles.center,
                       PanBgStyle,
                       PanXBg,
                       PanXShadow,
-                      styles.overlay,
                     ],
                   }}
                 >
@@ -672,11 +675,11 @@ export function MDEditorRender({
                         left: 0,
                       },
                       styles.fw,
+                      styles.overlay,
                       styles.center,
                       PanBgStyle,
                       PanYBg,
                       PanYShadow,
-                      styles.overlay,
                     ],
                   }}
                 >
