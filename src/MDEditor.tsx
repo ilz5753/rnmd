@@ -190,7 +190,7 @@ export function MDEditorRender({
     }
     return size;
   }, [paddingSize]);
-  let uGap = useMemo(() => ({ gap: pad }), [pad]);
+  // let uGap = useMemo(() => ({ gap: pad }), [pad]);
   let _Pad = useMemo(() => ({ padding: 8 }), []);
   let gap = useMemo(() => ({ gap: pad / 3 }), [pad]);
   let fd: any = useMemo(
@@ -333,14 +333,14 @@ export function MDEditorRender({
     [value, previewConfig]
   );
   let PanXBg = useAnimatedStyle(() => ({
-    [isRTL ? 'right' : `left`]: dx.value - (isRTL ? pad : 0),
+    // [isRTL ? 'right' : `left`]: dx.value - (isRTL ? pad : 0),
     backgroundColor: withTiming(activeX.value ? activePanBg : panBg),
     opacity: withTiming(showPreview ? 1 : 0.5),
   }));
   let PanYBg = useAnimatedStyle(() => ({
     backgroundColor: withTiming(activeY.value ? activePanBg : panBg),
     opacity: withTiming(showPreview ? 1 : 0.5),
-    top: dy.value,
+    // top: dy.value,
   }));
   let PanXShadow = useAnimatedStyle(() => ({
     shadowColor: withTiming(
@@ -583,7 +583,7 @@ export function MDEditorRender({
         </Animated.View>
         <Animated.View {...{ style: [styles.f1] }}>
           {horizontal ? (
-            <Animated.View {...{ style: [styles.f1, fd, uGap] }}>
+            <Animated.View {...{ style: [styles.f1, fd] }}>
               <Animated.View
                 {...{
                   style: [isRTL ? horMaxWidth : horLowWidth, _Pad, horHeight],
@@ -607,10 +607,10 @@ export function MDEditorRender({
                     style: [
                       {
                         width: pad,
-                        top: 0,
+                        // top: 0,
                       },
-                      styles.overlay,
                       horHeight,
+                      // styles.overlay,
                       // styles.f1,
                       styles.center,
                       PanBgStyle,
@@ -647,7 +647,7 @@ export function MDEditorRender({
               </Animated.View>
             </Animated.View>
           ) : (
-            <Animated.View {...{ style: [styles.f1, uGap] }}>
+            <Animated.View {...{ style: [styles.f1] }}>
               <Animated.View
                 {...{
                   style: [verLowHeight, _Pad, styles.fw],
@@ -670,12 +670,12 @@ export function MDEditorRender({
                   {...{
                     style: [
                       // styles.f1,
+                      styles.fw,
                       {
                         height: pad,
-                        left: 0,
+                        // left: 0,
                       },
-                      styles.fw,
-                      styles.overlay,
+                      // styles.overlay,
                       styles.center,
                       PanBgStyle,
                       PanYBg,
