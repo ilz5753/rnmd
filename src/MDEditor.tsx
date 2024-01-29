@@ -117,7 +117,7 @@ export interface IMDEditor {
   previewConfig?: TMDEditorPreview;
 }
 let _wz = 0.2;
-let _wh = 0.36;
+let _wh = 0.24;
 let minMultiplier = (n = 1) => n * _wz;
 let minWorkletMultiplier = (n = 1) => {
   'worklet';
@@ -222,12 +222,13 @@ export function MDEditorRender({
   );
   let spaces = useDerivedValue(() => HeaderHeight + bsh.value, [HeaderHeight]);
   let _RemainHeight_ = useDerivedValue(
-    () => h - (spaces.value + keyboardHeight.value)
+    () => h - (spaces.value + keyboardHeight.value),
+    [h]
   );
   let wp = useMemo(() => w - pad, [w, pad]);
   let wz = useMemo(() => minMultiplier(wp), [wp]);
   let mw = useMemo(() => wp - wz, [wp, wz]);
-  let hp = useDerivedValue(() => _RemainHeight_.value - pad);
+  let hp = useDerivedValue(() => _RemainHeight_.value - pad, [pad]);
   let hz = useDerivedValue(() => minWorkletMultiplier(hp.value));
   let mh = useDerivedValue(() => hp.value - hz.value);
   let BG = useAnimatedStyle(() => ({

@@ -40,6 +40,7 @@ function MDPreviewViaError({ styles = {}, md, colors = {} }: IMDPreview) {
     <Animated.ScrollView
       {...{
         style: [{ backgroundColor: bg }],
+        keyboardShouldPersistTaps: 'always',
       }}
     >
       {renderer(parse)}
