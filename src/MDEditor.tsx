@@ -19,7 +19,7 @@ import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   FadeInUp,
   FadeOutUp,
-  runOnJS,
+  // runOnJS,
   useAnimatedReaction,
   useAnimatedStyle,
   useDerivedValue,
@@ -117,12 +117,12 @@ export interface IMDEditor {
   previewConfig?: TMDEditorPreview;
 }
 let _wz = 0.2;
-let _wh = 0.24;
-let minMultiplier = (n = 1) => n * _wz;
-let minWorkletMultiplier = (n = 1) => {
-  'worklet';
-  return n * _wh;
-};
+let _hz = 0.24;
+// let minMultiplier = (n = 1) => n * _wz;
+// let minWorkletMultiplier = (n = 1) => {
+//   'worklet';
+//   return n * _hz;
+// };
 export function MDEditorRender({
   colors,
   horizontal = false,
@@ -226,10 +226,10 @@ export function MDEditorRender({
     [h]
   );
   let wp = useMemo(() => w - pad, [w, pad]);
-  let wz = useMemo(() => minMultiplier(wp), [wp]);
+  let wz = useMemo(() => wp * _wz, [wp]);
   let mw = useMemo(() => wp - wz, [wp, wz]);
   let hp = useDerivedValue(() => _RemainHeight_.value - pad, [pad]);
-  let hz = useDerivedValue(() => minWorkletMultiplier(hp.value));
+  let hz = useDerivedValue(() => hp.value * _hz);
   let mh = useDerivedValue(() => hp.value - hz.value);
   let BG = useAnimatedStyle(() => ({
     backgroundColor: wrapperBg,
@@ -375,7 +375,7 @@ export function MDEditorRender({
     () => hp.value,
     (hpv) => {
       if (!horizontal) {
-        let hzv = minWorkletMultiplier(hpv);
+        let hzv = hpv * _hz;
         if (showPreview) {
           dy.value = withTiming(hzv);
           hdy.value = hzv;
@@ -420,36 +420,16 @@ export function MDEditorRender({
     let sp = !showPreview;
     if (horizontal) {
       let x = sp ? hdx.value : wp;
-      dx.value = withTiming(x, undefined, (f) => {
-        if (f) runOnJS(setShowPreview)(sp);
-      });
+      console.log({ x, wp, sp });
+      dx.value = withTiming(x);
+      // hdx.value = x;
     } else {
       let y = sp ? hdy.value : hp.value;
-      dy.value = withTiming(y, undefined, (f) => {
-        if (f) runOnJS(setShowPreview)(sp);
-      });
+      console.log({ y, sp });
+      dy.value = withTiming(y);
+      // hdy.value = y;
     }
-    // setShowPreview(sp);
-    // if (horizontal) {
-    //   let wp = w - pad;
-    //   let z = isRTL ? -1 : 1;
-    //   let mw = z * wp;
-    //   if (sp) mw = z * wThrid;
-    //   panWidth.value = withTiming(mw, undefined, f => {
-    //     if (f) runOnJS(setShowPreview)(sp);
-    //   });
-    //   panWidthHelp.value = mw;
-    // } else {
-    //   let mh = _RemainHeight_.value - pad;
-    //   if (sp)
-    //     mh = keyboardIsActive.value
-    //       ? h - (spaces.value + keyboardHeight.value + pad + _hThrid_.value)
-    //       : _hThrid_.value;
-    //   panHeight.value = withTiming(mh, undefined, f => {
-    //     if (f) runOnJS(setShowPreview)(sp);
-    //   });
-    //   panHeightHelp.value = mh;
-    // }
+    setShowPreview(sp);
   }, [horizontal, showPreview, wp]);
   let toggleSearch = useCallback(() => {
     setShowSearch((s) => !s);
